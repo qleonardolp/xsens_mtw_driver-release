@@ -320,7 +320,7 @@ bool XdaInterface::prepare()
 				break;
 			}
 		}
-		if (_kbhit() || ros::ok())
+		if (_kbhit() && ros::ok())
 		{
 			char keypressed = (char)_getch();
 			if(keypressed == 'y')
