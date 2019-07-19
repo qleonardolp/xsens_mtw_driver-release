@@ -18,7 +18,7 @@ class MtwCallback : public XsCallback
 public:
 	MtwCallback(int mtwIndex, XsDevice* device, size_t maxBufferSize = 5);
 
-	bool dataAvailable() const;
+	bool dataAvailable() ;	//const;
 
 	XsDataPacket const * getOldestPacket() const;
 

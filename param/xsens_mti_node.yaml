@@ -9,7 +9,7 @@
 ## Log file (optional), placed in ~/.ros/ otherwise use absolute path
 # log_file: log.mtb
 
-publisher_queue_size: 100
+publisher_queue_size: 5
 
 # Message publishers
 pub_imu: true

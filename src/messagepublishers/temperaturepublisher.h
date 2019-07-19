@@ -31,11 +31,11 @@ struct TemperaturePublisher : public PacketCallback
 {
     ros::Publisher pub;
 
-    TemperaturePublisher(ros::NodeHandle &node)
+    TemperaturePublisher(ros::NodeHandle &node, std::string sensorID)
     {
         int pub_queue_size = 5;
         ros::param::get("~publisher_queue_size", pub_queue_size);
-        pub = node.advertise<sensor_msgs::Temperature>("/temperature", pub_queue_size);
+        pub = node.advertise<sensor_msgs::Temperature>("/temperature_" + sensorID, pub_queue_size);
     }
 
     void operator()(const XsDataPacket &packet, ros::Time timestamp)

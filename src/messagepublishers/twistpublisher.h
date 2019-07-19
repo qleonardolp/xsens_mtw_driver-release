@@ -31,11 +31,11 @@ struct TwistPublisher : public PacketCallback
 {
     ros::Publisher pub;
 
-    TwistPublisher(ros::NodeHandle &node)
+    TwistPublisher(ros::NodeHandle &node, std::string sensorID)
     {
         int pub_queue_size = 5;
         ros::param::get("~publisher_queue_size", pub_queue_size);
-        pub = node.advertise<geometry_msgs::TwistStamped>("/filter/twist", pub_queue_size);
+        pub = node.advertise<geometry_msgs::TwistStamped>("/filter/twist" + sensorID, pub_queue_size);
     }
 
     void operator()(const XsDataPacket &packet, ros::Time timestamp)

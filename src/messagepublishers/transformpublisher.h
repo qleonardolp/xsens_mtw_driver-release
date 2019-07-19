@@ -32,7 +32,7 @@ struct TransformPublisher : public PacketCallback
 {
     tf2_ros::TransformBroadcaster tf_broadcaster;
 
-    TransformPublisher(ros::NodeHandle &node) : tf_broadcaster()
+    TransformPublisher(ros::NodeHandle &node, std::string sensorID) : tf_broadcaster()
     {
     }
 

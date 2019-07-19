@@ -42,13 +42,13 @@ int main(int argc, char *argv[])
 
 	XdaInterface *xdaInterface = new XdaInterface();
 
-	xdaInterface->registerPublishers(node);
-
 	if (!xdaInterface->connectDevice())
 		return -1;
 
 	if (!xdaInterface->prepare())
 		return -1;
+
+	xdaInterface->registerPublishers(node); //precisa chamar depois de connectDevice() e prepare() pois depende da quantidade de MTws "m_mtwCallback.size()"
 
 	while (ros::ok())
 	{

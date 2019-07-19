@@ -56,11 +56,11 @@ struct ImuPublisher : public PacketCallback
     double linear_acceleration_variance[3];
     double angular_velocity_variance[3];
 
-    ImuPublisher(ros::NodeHandle &node)
+    ImuPublisher(ros::NodeHandle &node, std::string sensorID)
     {
         int pub_queue_size = 5;
         ros::param::get("~publisher_queue_size", pub_queue_size);
-        pub = node.advertise<sensor_msgs::Imu>("/imu/data", pub_queue_size);
+        pub = node.advertise<sensor_msgs::Imu>("/imu/data" + sensorID, pub_queue_size);
 
         // REP 145: Conventions for IMU Sensor Drivers (http://www.ros.org/reps/rep-0145.html)
         variance_from_stddev_param("~orientation_stddev", orientation_variance);

@@ -72,12 +72,6 @@ XdaInterface::~XdaInterface()
 void XdaInterface::spinFor(std::chrono::milliseconds timeout)
 {
 	RosXsDataPacket rosPacket = m_xdaCallback.next(timeout);
-	/*
-	for (int i = 0; i < (int)mtwDevices.size(); i++)
-	{
-		
-	}
-	*/
 
 	if (!rosPacket.second.empty())
 	{
@@ -92,63 +86,55 @@ void XdaInterface::registerPublishers(ros::NodeHandle &node)
 {
 	bool should_publish = true;		// <- true ?
 
-	if (ros::param::get("~pub_imu", should_publish) && should_publish)
+	for (int i = 0; i < mtwDeviceIds.size(); i++)
 	{
-		registerCallback(new ImuPublisher(node));
-	}
-	if (ros::param::get("~pub_quaternion", should_publish) && should_publish)
-	{
-		registerCallback(new OrientationPublisher(node));
-	}
-	if (ros::param::get("~pub_acceleration", should_publish) && should_publish)
-	{
-		registerCallback(new AccelerationPublisher(node));
-	}
-	if (ros::param::get("~pub_angular_velocity", should_publish) && should_publish)
-	{
-		registerCallback(new AngularVelocityPublisher(node));
-	}
-	if (ros::param::get("~pub_mag", should_publish) && should_publish)
-	{
-		registerCallback(new MagneticFieldPublisher(node));
-	}
-	if (ros::param::get("~pub_dq", should_publish) && should_publish)
-	{
-		//registerCallback(new OrientationIncrementsPublisher(node));
-		registerCallback(new OrientationPublisher(node));
-	}
-	if (ros::param::get("~pub_dv", should_publish) && should_publish)
-	{
-		//registerCallback(new VelocityIncrementPublisher(node));
-		registerCallback(new AngularVelocityPublisher(node));
-	}
-	if (ros::param::get("~pub_sampletime", should_publish) && should_publish)
-	{
-		registerCallback(new TimeReferencePublisher(node));
-	}
-	if (ros::param::get("~pub_temperature", should_publish) && should_publish)
-	{
-		registerCallback(new TemperaturePublisher(node));
-	}
-	if (ros::param::get("~pub_pressure", should_publish) && should_publish)
-	{
-		registerCallback(new PressurePublisher(node));
-	}
-	if (ros::param::get("~pub_gnss", should_publish) && should_publish)
-	{
-		registerCallback(new GnssPublisher(node));
-	}
-	if (ros::param::get("~pub_twist", should_publish) && should_publish)
-	{
-		registerCallback(new TwistPublisher(node));
-	}
-	if (ros::param::get("~pub_free_acceleration", should_publish) && should_publish)
-	{
-		registerCallback(new FreeAccelerationPublisher(node));
-	}
-	if (ros::param::getCached("~pub_transform", should_publish) && should_publish)
-	{
-		registerCallback(new TransformPublisher(node));
+		nodesperMTw = 0;
+
+		if (ros::param::get("~pub_imu", should_publish) && should_publish)
+		{
+			registerCallback(new ImuPublisher(node, mtwDeviceIds[i].toString().toStdString()));
+			nodesperMTw++;
+		}
+		if (ros::param::get("~pub_quaternion", should_publish) && should_publish)
+		{
+			registerCallback(new OrientationPublisher(node, mtwDeviceIds[i].toString().toStdString()));
+			nodesperMTw++;
+		}
+		if (ros::param::get("~pub_acceleration", should_publish) && should_publish)
+		{
+			registerCallback(new AccelerationPublisher(node, mtwDeviceIds[i].toString().toStdString()));
+			nodesperMTw++;
+		}
+		if (ros::param::get("~pub_angular_velocity", should_publish) && should_publish)
+		{
+			registerCallback(new AngularVelocityPublisher(node, mtwDeviceIds[i].toString().toStdString()));
+			nodesperMTw++;
+		}
+		if (ros::param::get("~pub_twist", should_publish) && should_publish)
+		{
+			registerCallback(new TwistPublisher(node, mtwDeviceIds[i].toString().toStdString()));
+			nodesperMTw++;
+		}
+		if (ros::param::get("~pub_free_acceleration", should_publish) && should_publish)
+		{
+			registerCallback(new FreeAccelerationPublisher(node, mtwDeviceIds[i].toString().toStdString()));
+			nodesperMTw++;
+		}
+		if (ros::param::getCached("~pub_transform", should_publish) && should_publish)
+		{
+			registerCallback(new TransformPublisher(node, mtwDeviceIds[i].toString().toStdString()));			// INVESTIGAR
+			nodesperMTw++;
+		}
+		if (ros::param::get("~pub_sampletime", should_publish) && should_publish)
+		{
+			registerCallback(new TimeReferencePublisher(node, mtwDeviceIds[i].toString().toStdString()));
+			nodesperMTw++;
+		}
+		if (ros::param::get("~pub_temperature", should_publish) && should_publish)
+		{
+			registerCallback(new TemperaturePublisher(node, mtwDeviceIds[i].toString().toStdString()));
+			nodesperMTw++;
+		}
 	}
 }
 

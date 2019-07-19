@@ -42,7 +42,6 @@ int main(int argc, char *argv[])
 
 	XdaInterface *xdaInterface = new XdaInterface();
 
-	xdaInterface->registerPublishers(node);
 
 	if (!xdaInterface->connectDevice())
 		return -1;
@@ -50,13 +49,15 @@ int main(int argc, char *argv[])
 	if (!xdaInterface->prepare())
 		return -1;
 
+	//xdaInterface->registerPublishers(node);
+	/*
 	while (ros::ok())
 	{
 		xdaInterface->spinFor(milliseconds(100));
 
 		ros::spinOnce();
 	}
-
+	*/
 	xdaInterface->close();
 
 	return 0;

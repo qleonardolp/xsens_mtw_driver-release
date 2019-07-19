@@ -67,6 +67,11 @@ private:
 	WirelessMasterCallback m_wirelessMasterCallback;	// Callback for wireless master
 	std::vector<MtwCallback*> m_mtwCallbacks;			// Callbacks for mtw devices
 
+	XsDeviceIdArray allDeviceIds;						//all devices IDs, including the Awinda base
+	XsDeviceIdArray mtwDeviceIds;						// array for only the MTws IDs
+	XsDevicePtrArray mtwDevices;
+	int nodesperMTw;
+
 	//Communicator *m_master;
 	//XsDeviceEx* m_mtw;
 };

@@ -14,10 +14,14 @@ MtwCallback::MtwCallback(int mtwIndex, XsDevice* device, size_t maxBufferSize)
 	,m_maxBufferSize(maxBufferSize)
 {}
 
-bool MtwCallback::dataAvailable() const
+bool MtwCallback::dataAvailable() //const
 {
-	XsMutexLocker lock(m_mutex);
-	return !m_packetBuffer.empty();
+	//XsMutexLocker lock(m_mutex);
+	//return !m_packetBuffer.empty();
+
+	std::unique_lock<std::mutex> lock(m_stdmutex);
+	return !m_rosBuffer.empty();
+
 }
 
 XsDataPacket const * MtwCallback::getOldestPacket() const 
@@ -65,9 +69,9 @@ XsDevice const & MtwCallback::device() const
 
 void MtwCallback::onLiveDataAvailable(XsDevice*, const XsDataPacket* packet)
 {
-	std::unique_lock<std::mutex> lock(m_stdmutex);
-	ros::Time now = ros::Time::now();
-	/*
+	//std::unique_lock<std::mutex> lock(m_stdmutex);
+	//ros::Time now = ros::Time::now();
+	
 	XsMutexLocker lock(m_mutex);
 	// NOTE: Processing of packets should not be done in this thread.
 
@@ -77,7 +81,7 @@ void MtwCallback::onLiveDataAvailable(XsDevice*, const XsDataPacket* packet)
 		std::cout << std::endl;
 		deleteOldestPacket();
 	}
-	*/
+	/*
 	assert(packet != 0);
 
 	// Discard oldest packet if buffer full
@@ -93,4 +97,5 @@ void MtwCallback::onLiveDataAvailable(XsDevice*, const XsDataPacket* packet)
 	// the waiting thread only to block again
 	lock.unlock();
 	m_condition.notify_one();
+	*/
 }

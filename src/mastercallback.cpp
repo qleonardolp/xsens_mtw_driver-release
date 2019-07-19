@@ -21,31 +21,31 @@ void WirelessMasterCallback::onConnectivityChanged(XsDevice* dev, XsConnectivity
 	case XCS_Disconnected:		/*!< Device has disconnected, only limited informational functionality is available. */
 		
         //std::cout << "\nEVENT: MTW Disconnected -> " << *dev << std::endl;
-        ROS_INFO("EVENT: MTW Disconnected -> ");
+		ROS_INFO_STREAM("EVENT: MTW Disconnected -> " << dev->deviceId().toString().toStdString() );
 		m_connectedMTWs.erase(dev);
 		break;
 	case XCS_Rejected:			/*!< Device has been rejected and is disconnected, only limited informational functionality is available. */
-		ROS_INFO("EVENT: MTW Rejected -> ");
+		ROS_INFO_STREAM("EVENT: MTW Rejected -> " << dev->deviceId().toString().toStdString() );
 		m_connectedMTWs.erase(dev);
 		break;
 	case XCS_PluggedIn:			/*!< Device is connected through a cable. */
-		ROS_INFO("EVENT: MTW PluggedIn -> ");
+		ROS_INFO_STREAM("EVENT: MTW PluggedIn -> " << dev->deviceId().toString().toStdString() );
 		m_connectedMTWs.erase(dev);
 		break;
 	case XCS_Wireless:			/*!< Device is connected wirelessly. */
-		ROS_INFO("EVENT: MTW Connected -> ");
+		ROS_INFO_STREAM("EVENT: MTW Connected -> " << dev->deviceId().toString().toStdString() );
 		m_connectedMTWs.insert(dev);
 		break;
 	case XCS_File:				/*!< Device is reading from a file. */
-		ROS_INFO("EVENT: MTW File -> ");
+		ROS_INFO_STREAM("EVENT: MTW File -> " << dev->deviceId().toString().toStdString() );
 		m_connectedMTWs.erase(dev);
 		break;
 	case XCS_Unknown:			/*!< Device is in an unknown state. */
-		ROS_INFO("EVENT: MTW Unknown -> ");
+		ROS_INFO_STREAM("EVENT: MTW Unkown -> " << dev->deviceId().toString().toStdString() );
 		m_connectedMTWs.erase(dev);
 		break;
 	default:
-		ROS_INFO("EVENT: MTW Error -> ");
+		ROS_INFO_STREAM("EVENT: MTW Error -> " << dev->deviceId().toString().toStdString() );
 		m_connectedMTWs.erase(dev);
 		break;
 	}

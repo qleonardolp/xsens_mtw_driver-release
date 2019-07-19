@@ -31,11 +31,11 @@ struct OrientationPublisher : public PacketCallback
 {
     ros::Publisher pub;
 
-    OrientationPublisher(ros::NodeHandle &node)
+    OrientationPublisher(ros::NodeHandle &node, std::string sensorID)
     {
         int pub_queue_size = 5;
         ros::param::get("~publisher_queue_size", pub_queue_size);
-        pub = node.advertise<geometry_msgs::QuaternionStamped>("/filter/quaternion", pub_queue_size);
+        pub = node.advertise<geometry_msgs::QuaternionStamped>("/filter/quaternion" + sensorID, pub_queue_size);
     }
 
     void operator()(const XsDataPacket &packet, ros::Time timestamp)

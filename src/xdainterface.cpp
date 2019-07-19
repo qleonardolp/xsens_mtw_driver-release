@@ -71,85 +71,142 @@ XdaInterface::~XdaInterface()
 
 void XdaInterface::spinFor(std::chrono::milliseconds timeout)
 {
-	RosXsDataPacket rosPacket = m_xdaCallback.next(timeout);
-	/*
-	for (int i = 0; i < (int)mtwDevices.size(); i++)
+	//bool newDataAvailable = false;
+	int nodeCounter = 0;
+	for (int i = 0; i < m_mtwCallbacks.size(); i++)
 	{
+		if (m_mtwCallbacks[i]->dataAvailable())
+		{
+			//newDataAvailable = true;
+			//XsDataPacket const *packet = m_mtwCallbacks[i]->getOldestPacket();
+			RosXsDataPacket rosPacket = m_mtwCallbacks[i]->next(timeout);
+
+			//rosPacket.second = packet;
+
+			if (!rosPacket.second.empty())
+			{
+				for (auto &cb : m_callbacks)
+				{
+					nodeCounter++;
+					cb->operator()(rosPacket.second, rosPacket.first);
+					if((nodeCounter % topicsperMTw) == 0) 
+					{
+						break;
+					}
+				}
+			}
+			else
+			{
+				ROS_WARN("rosPacket.second is empty!");
+			}
+			
+		}
+		else
+		{
+			ROS_WARN("m_mtwCallbacks[i] data Unavailable");
+		}
 		
 	}
-	*/
-
+	/*
+	RosXsDataPacket rosPacket = m_xdaCallback.next(timeout);
 	if (!rosPacket.second.empty())
 	{
 		for (auto &cb : m_callbacks)
 		{
-			cb->operator()(rosPacket.second, rosPacket.first);
+			cb->operator()(rosPacket.second, rosPacket.first);			// operator()(const XsDataPacket &packet, ros::Time timestamp)
 		}
 	}
+	*/
+}
+
+void XdaInterface::registerCallback(PacketCallback *cb)
+{
+	m_callbacks.push_back(cb);
+
+	// preciso criar uma lista ou vetor de m_callbacks, um pra cada MTw pois um apenas é a lista de topicos para um sensor
+	/*
+	std::vector<PacketCallback *> callbackMtw;
+	for (int i = 0; i < mtwDevices.size(); i++)
+	{
+		//callbackMtw[i] = m_callbacks.push_back(cb);
+	}
+	*/
 }
 
 void XdaInterface::registerPublishers(ros::NodeHandle &node)
 {
 	bool should_publish = true;		// <- true ?
 
-	if (ros::param::get("~pub_imu", should_publish) && should_publish)
+	ROS_INFO("Creating Publishers...");
+
+	for (int i = 0; i < mtwDeviceIds.size(); i++)
 	{
-		registerCallback(new ImuPublisher(node));
+		topicsperMTw = 0;
+
+		if (ros::param::get("~pub_imu", should_publish) && should_publish)
+		{
+			registerCallback(new ImuPublisher(node, mtwDeviceIds[i].toString().toStdString()));
+			topicsperMTw++;
+			ROS_INFO_STREAM(mtwDeviceIds[i].toString().toStdString() + " imuPublisher created");
+		}
+		if (ros::param::get("~pub_quaternion", should_publish) && should_publish)
+		{
+			registerCallback(new OrientationPublisher(node, mtwDeviceIds[i].toString().toStdString()));
+			topicsperMTw++;
+		}
+		if (ros::param::get("~pub_acceleration", should_publish) && should_publish)
+		{
+			registerCallback(new AccelerationPublisher(node, mtwDeviceIds[i].toString().toStdString()));
+			topicsperMTw++;
+		}
+		if (ros::param::get("~pub_angular_velocity", should_publish) && should_publish)
+		{
+			registerCallback(new AngularVelocityPublisher(node, mtwDeviceIds[i].toString().toStdString()));
+			topicsperMTw++;
+		}
+		if (ros::param::get("~pub_twist", should_publish) && should_publish)
+		{
+			registerCallback(new TwistPublisher(node, mtwDeviceIds[i].toString().toStdString()));
+			topicsperMTw++;
+		}
+		if (ros::param::get("~pub_free_acceleration", should_publish) && should_publish)
+		{
+			registerCallback(new FreeAccelerationPublisher(node, mtwDeviceIds[i].toString().toStdString()));
+			topicsperMTw++;
+		}
+		if (ros::param::getCached("~pub_transform", should_publish) && should_publish)
+		{
+			registerCallback(new TransformPublisher(node, mtwDeviceIds[i].toString().toStdString()));			// INVESTIGAR
+			topicsperMTw++;
+		}
+		if (ros::param::get("~pub_sampletime", should_publish) && should_publish)
+		{
+			registerCallback(new TimeReferencePublisher(node, mtwDeviceIds[i].toString().toStdString()));
+			topicsperMTw++;
+		}
+		if (ros::param::get("~pub_temperature", should_publish) && should_publish)
+		{
+			registerCallback(new TemperaturePublisher(node, mtwDeviceIds[i].toString().toStdString()));
+			topicsperMTw++;
+		}
 	}
-	if (ros::param::get("~pub_quaternion", should_publish) && should_publish)
+	
+	ROS_INFO("topics per MTw: %d", topicsperMTw);
+	ROS_INFO("Press 'y' to proceed to the publishing spin");
+	bool waitPub = true;
+	while (waitPub)
 	{
-		registerCallback(new OrientationPublisher(node));
-	}
-	if (ros::param::get("~pub_acceleration", should_publish) && should_publish)
-	{
-		registerCallback(new AccelerationPublisher(node));
-	}
-	if (ros::param::get("~pub_angular_velocity", should_publish) && should_publish)
-	{
-		registerCallback(new AngularVelocityPublisher(node));
-	}
-	if (ros::param::get("~pub_mag", should_publish) && should_publish)
-	{
-		registerCallback(new MagneticFieldPublisher(node));
-	}
-	if (ros::param::get("~pub_dq", should_publish) && should_publish)
-	{
-		//registerCallback(new OrientationIncrementsPublisher(node));
-		registerCallback(new OrientationPublisher(node));
-	}
-	if (ros::param::get("~pub_dv", should_publish) && should_publish)
-	{
-		//registerCallback(new VelocityIncrementPublisher(node));
-		registerCallback(new AngularVelocityPublisher(node));
-	}
-	if (ros::param::get("~pub_sampletime", should_publish) && should_publish)
-	{
-		registerCallback(new TimeReferencePublisher(node));
-	}
-	if (ros::param::get("~pub_temperature", should_publish) && should_publish)
-	{
-		registerCallback(new TemperaturePublisher(node));
-	}
-	if (ros::param::get("~pub_pressure", should_publish) && should_publish)
-	{
-		registerCallback(new PressurePublisher(node));
-	}
-	if (ros::param::get("~pub_gnss", should_publish) && should_publish)
-	{
-		registerCallback(new GnssPublisher(node));
-	}
-	if (ros::param::get("~pub_twist", should_publish) && should_publish)
-	{
-		registerCallback(new TwistPublisher(node));
-	}
-	if (ros::param::get("~pub_free_acceleration", should_publish) && should_publish)
-	{
-		registerCallback(new FreeAccelerationPublisher(node));
-	}
-	if (ros::param::getCached("~pub_transform", should_publish) && should_publish)
-	{
-		registerCallback(new TransformPublisher(node));
-	}
+		if (ros::ok())
+		{
+			if (_kbhit())
+			{
+				char keypressed = (char)_getch();
+				if(keypressed == 'y')
+				waitPub = false;	
+			}
+		}
+	} //do NOT works properly here
+
 }
 
 bool XdaInterface::connectDevice()
@@ -257,7 +314,6 @@ bool XdaInterface::connectDevice()
 	/*
 
 	m_device = m_control->device(mtPort.deviceId());
-	//m_device = m_master->openPort(m_master->);
 	assert(m_device != 0);
 
 	ROS_INFO("Device: %s, with ID: %s opened.", m_device->productCode().toStdString().c_str(), m_device->deviceId().toString().c_str());
@@ -312,8 +368,9 @@ bool XdaInterface::prepare()
 			size_t nextCount = m_wirelessMasterCallback.getWirelessMTWs().size();
 			if (nextCount != connectedMTWCount)
 			{
-				ROS_INFO("Number of connected MTWs: %d. Press 'y' to start measurement.", (int)nextCount);
-				ROS_INFO("Press 'q' to QUIT PROPERLY this node, wait for the 'Devices closed' message and then Ctrl+C");
+				//ROS_INFO("Number of connected MTWs: %d. Press 'y' to start measurement.", (int)nextCount);
+				//ROS_INFO("Press 'q' to QUIT PROPERLY this node, wait for the 'Devices closed' message and then Ctrl+C");
+				ROS_INFO_STREAM("Number of connected MTWs: " << (int)nextCount << ". Press 'y' to start measurement or 'q' to end node.");
 				connectedMTWCount = nextCount;
 			}
 			else
@@ -321,18 +378,20 @@ bool XdaInterface::prepare()
 				break;
 			}
 		}
-		if (_kbhit())
+		if (ros::ok())
 		{
-			char keypressed = (char)_getch();
-			if(keypressed == 'y')
-				waitForConnections = false;
-			if(keypressed == 'q')
+			if (_kbhit())
 			{
-				interruption = true;
-				waitForConnections = false;
+				char keypressed = (char)_getch();
+				if(keypressed == 'y')
+					waitForConnections = false;
+				if(keypressed == 'q')
+				{
+					interruption = true;
+					waitForConnections = false;
+				}	
 			}
-
-		}
+		} //works properly here
 	}
 	while (waitForConnections);
 
@@ -352,8 +411,7 @@ bool XdaInterface::prepare()
 		return handleError("Could not put device into measurement mode");
 
 	ROS_INFO("Getting XsDevice instances for all MTWs...");
-	XsDeviceIdArray allDeviceIds = m_control->deviceIds();
-	XsDeviceIdArray mtwDeviceIds;
+	allDeviceIds = m_control->deviceIds();
 	
 	for (XsDeviceIdArray::const_iterator i = allDeviceIds.begin(); i != allDeviceIds.end(); ++i)
 	{
@@ -362,7 +420,7 @@ bool XdaInterface::prepare()
 			mtwDeviceIds.push_back(*i);
 		}
 	}
-	XsDevicePtrArray mtwDevices;
+	
 	for (XsDeviceIdArray::const_iterator i = mtwDeviceIds.begin(); i != mtwDeviceIds.end(); ++i)
 	{
 		XsDevicePtr mtwDevice = m_control->device(*i);
@@ -414,11 +472,6 @@ void XdaInterface::close()
 	}
 	m_control->closePort(m_port);
 	ROS_INFO("Devices closed");
-}
-
-void XdaInterface::registerCallback(PacketCallback *cb)
-{
-	m_callbacks.push_back(cb);
 }
 
 bool XdaInterface::handleError(std::string error)

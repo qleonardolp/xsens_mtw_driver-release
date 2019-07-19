@@ -64,9 +64,14 @@ private:
 	XsPortInfo m_port;
 	XdaCallback m_xdaCallback;					//
 	std::list<PacketCallback *> m_callbacks;
+	
 	WirelessMasterCallback m_wirelessMasterCallback;	// Callback for wireless master
 	std::vector<MtwCallback*> m_mtwCallbacks;			// Callbacks for mtw devices
-
+	
+	XsDeviceIdArray allDeviceIds;						//all devices IDs, including the Awinda base
+	XsDeviceIdArray mtwDeviceIds;						// array for only the MTws IDs
+	XsDevicePtrArray mtwDevices;
+	int topicsperMTw;
 	//Communicator *m_master;
 	//XsDeviceEx* m_mtw;
 };

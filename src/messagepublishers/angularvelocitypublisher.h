@@ -31,11 +31,11 @@ struct AngularVelocityPublisher : public PacketCallback
 {
     ros::Publisher pub;
 
-    AngularVelocityPublisher(ros::NodeHandle &node)
+    AngularVelocityPublisher(ros::NodeHandle &node, std::string sensorID)
     {
         int pub_queue_size = 5;
         ros::param::get("~publisher_queue_size", pub_queue_size);
-        pub = node.advertise<geometry_msgs::Vector3Stamped>("/imu/angular_velocity", pub_queue_size);
+        pub = node.advertise<geometry_msgs::Vector3Stamped>("/imu/angular_velocity" + sensorID, pub_queue_size);
     }
 
     void operator()(const XsDataPacket &packet, ros::Time timestamp)

@@ -31,11 +31,11 @@ struct TimeReferencePublisher : public PacketCallback
 {
     ros::Publisher pub;
 
-    TimeReferencePublisher(ros::NodeHandle &node)
+    TimeReferencePublisher(ros::NodeHandle &node, std::string sensorID)
     {
         int pub_queue_size = 5;
         ros::param::get("~publisher_queue_size", pub_queue_size);
-        pub = node.advertise<sensor_msgs::TimeReference>("/imu/time_ref", pub_queue_size);
+        pub = node.advertise<sensor_msgs::TimeReference>("/imu/time_ref_" + sensorID, pub_queue_size);
     }
 
     void operator()(const XsDataPacket &packet, ros::Time timestamp)
