@@ -200,26 +200,23 @@ int main(int argc, char *argv[])
 	    			break;
 	    		}
 	    	}
-	    	if (ros::ok())
+	    	if (_kbhit())
 	    	{
-	    		if (_kbhit())
+	    		char keypressed = (char)_getch();
+	    		if(keypressed == 'y')
+	    			waitForConnections = false;
+	    		if(keypressed == 'q')
 	    		{
-	    			char keypressed = (char)_getch();
-	    			if(keypressed == 'y')
-	    				waitForConnections = false;
-	    			if(keypressed == 'q')
-	    			{
-	    				interruption = true;
-	    				waitForConnections = false;
-	    			}	
-	    		}
-	    	} //works properly here
+	    			interruption = true;
+	    			waitForConnections = false;
+	    		}	
+	    	}//works properly here
 	    }
-	    while (waitForConnections);
+	    while (waitForConnections && ros::ok());
 
         if (interruption)
         {
-            throw std::runtime_error("abort");
+            throw std::runtime_error("\naborting\n");
         }
 
         ROS_INFO("Starting measurement...");
@@ -265,53 +262,79 @@ int main(int argc, char *argv[])
 
         ROS_INFO("Publish loop starting...");
 
-        //unsigned int printCounter = 0;
         ros::V_Publisher fAcc_publishers;
-        ros::Rate loop_rate = 10;
+        ros::Rate loop_rate = 400;
+		/* 
+		Desired 200 Hz per MTw, but ROS is throttling at 100 Hz
+		rostopic hz shows around 100 Hz
+		Although, echoing the /free_acc topic has more latency with low loop_rate
+		*/ 
 
         for (int i = 0; i < (int)mtwDevices.size(); ++i)
         {
             std::string mtwID = mtwDeviceIds[i].toString().toStdString();
-            ros::Publisher fAcc_pub = node.advertise<geometry_msgs::Vector3Stamped>("free_acc_" + mtwID , 100);
+            ros::Publisher fAcc_pub = node.advertise<geometry_msgs::Vector3Stamped>("free_acc_" + mtwID , 1000);
             fAcc_publishers.push_back(fAcc_pub);
         }
         
+		ROS_INFO("Publishers started, press 's' to stop!");
 
         while (ros::ok())
         {
+			if (!_kbhit())
+			{
+				for (size_t i = 0; i < mtwCallbacks.size(); ++i)
+            	{
+            	    if (mtwCallbacks[i]->dataAvailable())
+            	    {
+            	        XsDataPacket const * packet = mtwCallbacks[i]->getOldestPacket();
 
-            for (size_t i = 0; i < mtwCallbacks.size(); ++i)
-            {
-                if (mtwCallbacks[i]->dataAvailable())
-                {
-                    XsDataPacket const * packet = mtwCallbacks[i]->getOldestPacket();
+            	        if (packet->containsFreeAcceleration())
+            	        {
+            	            geometry_msgs::Vector3Stamped msg;
 
-                    if (packet->containsFreeAcceleration())
-                    {
-                        geometry_msgs::Vector3Stamped msg;
+            	            std::string frame_id = DEFAULT_FRAME_ID;
+            	            ros::param::getCached("~frame_id", frame_id);
 
-                        std::string frame_id = DEFAULT_FRAME_ID;
-                        ros::param::getCached("~frame_id", frame_id);
+            	            msg.header.stamp = ros::Time::now();
+            	            msg.header.frame_id = frame_id;
 
-                        msg.header.stamp = ros::Time::now();
-                        msg.header.frame_id = frame_id;
+            	            msg.vector.x = packet->freeAcceleration().value(0);
+            	            msg.vector.y = packet->freeAcceleration().value(1);
+            	            msg.vector.z = packet->freeAcceleration().value(2);
 
-                        XsVector accel = packet->freeAcceleration();
+            	            fAcc_publishers[i].publish(msg);
+            	        }
 
-                        msg.vector.x = accel[0];
-                        msg.vector.y = accel[1];
-                        msg.vector.z = accel[2];
-
-                        fAcc_publishers[i].publish(msg);
-                    }
-
-                    mtwCallbacks[i]->deleteOldestPacket();
-                }
-            }
+            	        mtwCallbacks[i]->deleteOldestPacket();
+            	    }
+            	}
+			}
+			else
+			{
+				if((char)_getch() == 's')
+					break;
+			}
             ros::spinOnce();
             loop_rate.sleep();
-            ROS_INFO_STREAM("Publishing at " << 1/loop_rate.cycleTime().toSec() << " Hz");
+            //ROS_INFO_STREAM("Publishing at " << 1/loop_rate.cycleTime().toSec() << " Hz"); // it is printing around 2500 Hz
         }
+
+		ROS_INFO("Setting config mode...");
+		if (!wirelessMasterDevice->gotoConfig())
+		{
+			std::ostringstream error;
+			error << "Failed to goto config mode: " << *wirelessMasterDevice;
+			throw std::runtime_error(error.str());
+		}
+
+		ROS_INFO("Disabling radio... ");
+		if (!wirelessMasterDevice->disableRadio())
+		{
+			std::ostringstream error;
+			error << "Failed to disable radio: " << *wirelessMasterDevice;
+			throw std::runtime_error(error.str());
+		}
 
     }
     catch(const std::exception& e)

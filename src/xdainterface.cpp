@@ -198,16 +198,13 @@ void XdaInterface::registerPublishers(ros::NodeHandle &node)
 	ROS_INFO("topics per MTw: %d", topicsperMTw);
 	ROS_INFO("Press 'y' to proceed to the publishing spin");
 	bool waitPub = true;
-	do
+	while (waitPub)
 	{
-		if (ros::ok())
+		if (_kbhit())
 		{
-			if (_kbhit())
-			{
-				waitPub = ((char)_getch() != 'y');	
-			}
+			waitPub = ((char)_getch() != 'y');	
 		}
-	}while (waitPub); //test if works properly now...
+	} // DO NOT WORK WITH ros::ok(), something is changing the ros::ok() state and no topics had been created
 
 }
 
@@ -380,27 +377,24 @@ bool XdaInterface::prepare()
 				break;
 			}
 		}
-		if (ros::ok())
+		if (_kbhit())
 		{
-			if (_kbhit())
+			char keypressed = (char)_getch();
+			if(keypressed == 'y')
+				waitForConnections = false;
+			if(keypressed == 'q')
 			{
-				char keypressed = (char)_getch();
-				if(keypressed == 'y')
-					waitForConnections = false;
-				if(keypressed == 'q')
-				{
-					interruption = true;
-					waitForConnections = false;
-				}	
-			}
+				interruption = true;
+				waitForConnections = false;
+			}	
 		} //works properly here
 	}
-	while (waitForConnections);
+	while (waitForConnections && ros::ok());
 
 	if(interruption)
 	{
-		close();
-		return true;
+		//close();
+		return false;
 	}
 
 	// read EMTS and device config stored in .mtb file header.
