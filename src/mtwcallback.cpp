@@ -14,13 +14,13 @@ MtwCallback::MtwCallback(int mtwIndex, XsDevice* device, size_t maxBufferSize)
 	,m_maxBufferSize(maxBufferSize)
 {}
 
-bool MtwCallback::dataAvailable() //const
+bool MtwCallback::dataAvailable() const
 {
-	//XsMutexLocker lock(m_mutex);
-	//return !m_packetBuffer.empty();
+	XsMutexLocker lock(m_mutex);
+	return !m_packetBuffer.empty();
 
-	std::unique_lock<std::mutex> lock(m_stdmutex);
-	return !m_rosBuffer.empty();
+	//std::unique_lock<std::mutex> lock(m_stdmutex);
+	//return !m_rosBuffer.empty();
 
 }
 

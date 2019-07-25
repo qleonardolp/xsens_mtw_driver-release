@@ -171,6 +171,16 @@ add_executable(xsens_mtw_node_out
   src/myxda.cpp
 )
 
+add_executable(mt_w_node
+  src/mt_w_main.cpp
+  src/mastercallback.cpp
+  src/mtwcallback.cpp
+  src/findClosestUpdateRate.cpp
+  src/conio.c
+  src/console.cpp
+  src/myxda.cpp
+)
+
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
 ## target back to the shorter version for ease of user use
@@ -191,6 +201,14 @@ target_link_libraries(xsens_mtw_node
 )
 
 target_link_libraries(xsens_mtw_node_out
+  xsensdeviceapi
+  xstypes
+  pthread
+  dl
+  ${catkin_LIBRARIES}
+)
+
+target_link_libraries(mt_w_node
   xsensdeviceapi
   xstypes
   pthread
