@@ -73,13 +73,17 @@ void XdaInterface::spinFor(std::chrono::milliseconds timeout)
 {
 	//bool newDataAvailable = false;
 	int nodeCounter = 0;
-	for (int i = 0; i < m_mtwCallbacks.size(); i++)
+	for (int i = 0; i < m_mtwCallbacks.size(); ++i)
 	{
-		if (m_mtwCallbacks[i]->dataAvailable())
-		{
+		XsDataPacket const *packet = m_mtwCallbacks[i]->getOldestPacket();
+		RosXsDataPacket rosPacket = m_mtwCallbacks[i]->next(timeout);
+		rosPacket.second = *packet;
+		
+		//if (m_mtwCallbacks[i]->dataAvailable())
+		//{
 			//newDataAvailable = true;
 			//XsDataPacket const *packet = m_mtwCallbacks[i]->getOldestPacket();
-			RosXsDataPacket rosPacket = m_mtwCallbacks[i]->next(timeout);
+			//RosXsDataPacket rosPacket = m_mtwCallbacks[i]->next(timeout);
 
 			//rosPacket.second = packet;
 
@@ -100,11 +104,11 @@ void XdaInterface::spinFor(std::chrono::milliseconds timeout)
 				ROS_WARN("rosPacket.second is empty!");
 			}
 			
-		}
-		else
-		{
-			ROS_WARN("m_mtwCallbacks[i] data Unavailable");
-		}
+		//}
+		//else
+		//{
+		//	ROS_WARN("m_mtwCallbacks[i] data Unavailable");				// ESTÁ DANDO ISSO
+		//}
 		
 	}
 	/*
@@ -139,73 +143,71 @@ void XdaInterface::registerPublishers(ros::NodeHandle &node)
 
 	ROS_INFO("Creating Publishers...");
 
-	for (int i = 0; i < mtwDeviceIds.size(); i++)
+	for (int i = 0; i < mtwDeviceIds.size(); ++i)
 	{
 		topicsperMTw = 0;
 
 		if (ros::param::get("~pub_imu", should_publish) && should_publish)
 		{
 			registerCallback(new ImuPublisher(node, mtwDeviceIds[i].toString().toStdString()));
-			topicsperMTw++;
+			++topicsperMTw;
 			ROS_INFO_STREAM(mtwDeviceIds[i].toString().toStdString() + " imuPublisher created");
 		}
 		if (ros::param::get("~pub_quaternion", should_publish) && should_publish)
 		{
 			registerCallback(new OrientationPublisher(node, mtwDeviceIds[i].toString().toStdString()));
-			topicsperMTw++;
+			++topicsperMTw;
 		}
 		if (ros::param::get("~pub_acceleration", should_publish) && should_publish)
 		{
 			registerCallback(new AccelerationPublisher(node, mtwDeviceIds[i].toString().toStdString()));
-			topicsperMTw++;
+			++topicsperMTw;
 		}
 		if (ros::param::get("~pub_angular_velocity", should_publish) && should_publish)
 		{
 			registerCallback(new AngularVelocityPublisher(node, mtwDeviceIds[i].toString().toStdString()));
-			topicsperMTw++;
+			++topicsperMTw;
 		}
 		if (ros::param::get("~pub_twist", should_publish) && should_publish)
 		{
 			registerCallback(new TwistPublisher(node, mtwDeviceIds[i].toString().toStdString()));
-			topicsperMTw++;
+			++topicsperMTw;
 		}
 		if (ros::param::get("~pub_free_acceleration", should_publish) && should_publish)
 		{
 			registerCallback(new FreeAccelerationPublisher(node, mtwDeviceIds[i].toString().toStdString()));
-			topicsperMTw++;
+			++topicsperMTw;
 		}
 		if (ros::param::getCached("~pub_transform", should_publish) && should_publish)
 		{
 			registerCallback(new TransformPublisher(node, mtwDeviceIds[i].toString().toStdString()));			// INVESTIGAR
-			topicsperMTw++;
+			++topicsperMTw;
 		}
 		if (ros::param::get("~pub_sampletime", should_publish) && should_publish)
 		{
 			registerCallback(new TimeReferencePublisher(node, mtwDeviceIds[i].toString().toStdString()));
-			topicsperMTw++;
+			++topicsperMTw;
 		}
 		if (ros::param::get("~pub_temperature", should_publish) && should_publish)
 		{
 			registerCallback(new TemperaturePublisher(node, mtwDeviceIds[i].toString().toStdString()));
-			topicsperMTw++;
+			++topicsperMTw;
 		}
 	}
 	
 	ROS_INFO("topics per MTw: %d", topicsperMTw);
 	ROS_INFO("Press 'y' to proceed to the publishing spin");
 	bool waitPub = true;
-	while (waitPub)
+	do
 	{
 		if (ros::ok())
 		{
 			if (_kbhit())
 			{
-				char keypressed = (char)_getch();
-				if(keypressed == 'y')
-				waitPub = false;	
+				waitPub = ((char)_getch() != 'y');	
 			}
 		}
-	} //do NOT works properly here
+	}while (waitPub); //test if works properly now...
 
 }
 
