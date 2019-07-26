@@ -40,4 +40,28 @@ $ rosrun xsens_mtw_driver mt_w_node
 
 - working in progress...
 
+## Troubleshooting
+
+If happen some problem with device access, follow the recommendations on the [xsens_mti_driver page](http://wiki.ros.org/xsens_mti_driver):
+
+- Make sure you are in the correct group:
+
+```
+$ ls -l /dev/ttyUSB0
+
+crw-rw---- 1 root dialout 188, 0 May  6 16:21 /dev/ttyUSB0
+
+$ groups
+
+"username" adm cdrom sudo dip plugdev lpadmin sambashare
+```
+
+- Add yourself to the group: 
+```
+$ sudo usermod -G dialout -a $USER
+$ newgrp dialout
+```
+
 ## License
+
+Checking the Xsens license...
