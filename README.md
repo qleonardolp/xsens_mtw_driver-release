@@ -13,8 +13,9 @@ connection with the Awinda base (USB port). Development based on [Xsens MTw SDK 
 
 ## Goals
 
-- Read at least two accelerometers and publish free_acceleration @ 200 Hz is apparently impossible once the `rostopic hz`
+- _Read at least two accelerometers and publish free_acceleration @ 200 Hz_: is apparently impossible once the `rostopic hz`
 is bounded by the "desiredUpdateRate" value set to the Xsens Awinda Station. The maximun value that works with two MTw is 120 Hz.
+However, the `acc_based_control` node is working at 240 Hz.
 
 ## Usage
 
@@ -47,7 +48,7 @@ no new messages
 - [ ] Study the mastercallback, mtwcallback and the in-build ROS callbacks;
 - [ ] ~~Enhance the callbacks to reduce the spinOnce() duration;~~
 - [ ] ~~Achieve 200 Hz per sensor;~~
-- [ ] Develop a node that process the difference between the free accelerations of two MTw and do some math with (acc_based_control);
+- [x] Develop a node that process the difference between the free accelerations of two MTw and do some math with (acc_based_control);
 
 
 ## Contribute

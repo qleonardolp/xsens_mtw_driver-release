@@ -36,40 +36,46 @@ int main (int argc, char **argv)
     ros::init(argc, argv, "acc_based_control");
     ros::NodeHandle node;
 
+    ros::Publisher torque = node.advertise<std_msgs::Float32>("desired_torque", 1000);
+    ros::Rate pub_loop = 240;
+
     std::string const mtwIDlimb = argv[1];
     std::string const mtwIDexo = argv[2];
 
-    ros::Subscriber sublimb = node.subscribe("free_acc_0034232" + mtwIDlimb.substr(mtwIDlimb.size()-1,mtwIDlimb.size()), 1000, freeAccCBLimb);
-    ros::Subscriber subexo = node.subscribe("free_acc_0034232" + mtwIDexo.substr(mtwIDexo.size()-1,mtwIDexo.size()), 1000, freeAccCBExo);
+    ros::Subscriber sublimb = node.subscribe("free_acc_0034232" + mtwIDlimb.substr(mtwIDlimb.size()-1, mtwIDlimb.size()), 1000, freeAccCBLimb);
+    ros::Subscriber subexo = node.subscribe("free_acc_0034232" + mtwIDexo.substr(mtwIDexo.size()-1, mtwIDexo.size()), 1000, freeAccCBExo);
     
     // topic name can handle the full mtwID and pick just the last character, substr( __pos, __n)
 
-    deltaFreeAcc.x = freeAccLimb.x - freeAccExo.x;
-    deltaFreeAcc.y = freeAccLimb.y - freeAccExo.y;
-    deltaFreeAcc.z = freeAccLimb.z - freeAccExo.z;
-    
-    float accNorm = sqrt((deltaFreeAcc.x)*(deltaFreeAcc.x) + (deltaFreeAcc.y)*(deltaFreeAcc.y) + (deltaFreeAcc.z)*(deltaFreeAcc.z));
-
     ROS_INFO_STREAM("Subcribed on " << sublimb.getTopic() << ", " << subexo.getTopic());
-
-    ros::Publisher torque = node.advertise<std_msgs::Float32>("desired_torque", 1000);
-    //ros::Rate pub_loop = 100;
     
-    std_msgs::Float32 dtorque;
-    dtorque.data = 1.0*accNorm;
-
-    torque.publish(dtorque);
-    ROS_INFO_STREAM("Publishing on " << torque.getTopic());
-
-    /*
     while (ros::ok())
     {
-        torque.publish(0.3*accNorm);
+        deltaFreeAcc.x = freeAccLimb.x - freeAccExo.x;
+        deltaFreeAcc.y = freeAccLimb.y - freeAccExo.y;
+        deltaFreeAcc.z = freeAccLimb.z - freeAccExo.z;
+    
+        float accNorm = sqrt((deltaFreeAcc.x)*(deltaFreeAcc.x) + (deltaFreeAcc.y)*(deltaFreeAcc.y) + (deltaFreeAcc.z)*(deltaFreeAcc.z));
+
+        std_msgs::Float32 dtorque;
+        /*
+         * -- Conversion from the accNorm [m/s^2] to the dtorque [Nm] --
+         *  Maxon Motor Parameter
+         *  Type Power 150 [W]
+         *  Nominal Voltage 48 [V]
+         *  No load speed 7590 [rpm]
+         *  Nominal Torque (max) 0.187 [Nm]
+         */
+        dtorque.data = 1.0*accNorm;
+
+        torque.publish(dtorque);
         
+        //ROS_INFO_STREAM("Publishing on " << torque.getTopic());
+
         ros::spinOnce();
         pub_loop.sleep();
     }
-    */
+
     ros::spin();
     return 0;
 }
