@@ -19,8 +19,6 @@
 geometry_msgs::Vector3 deltaFreeAcc;        //vetor para armazenar a diferença entre os dois sensores
 geometry_msgs::Vector3 freeAccLimb;         // Limb acc, [m/s^2]
 geometry_msgs::Vector3 freeAccExo;          // Exo acc, [m/s^2]
-ros::Rate pub_loop = 100;
-float accNorm;
 
 
 void freeAccCBLimb(const geometry_msgs::Vector3Stamped::ConstPtr& msg)
@@ -41,22 +39,28 @@ int main (int argc, char **argv)
     std::string const mtwIDlimb = argv[1];
     std::string const mtwIDexo = argv[2];
 
-    ros::Subscriber sublimb = node.subscribe("free_acc_" + mtwIDlimb, 1000, freeAccCBLimb);
-    ros::Subscriber subexo = node.subscribe("free_acc_" + mtwIDexo, 1000, freeAccCBExo);
+    ros::Subscriber sublimb = node.subscribe("free_acc_0034232" + mtwIDlimb.substr(mtwIDlimb.size()-1,mtwIDlimb.size()), 1000, freeAccCBLimb);
+    ros::Subscriber subexo = node.subscribe("free_acc_0034232" + mtwIDexo.substr(mtwIDexo.size()-1,mtwIDexo.size()), 1000, freeAccCBExo);
+    
+    // topic name can handle the full mtwID and pick just the last character, substr( __pos, __n)
 
     deltaFreeAcc.x = freeAccLimb.x - freeAccExo.x;
     deltaFreeAcc.y = freeAccLimb.y - freeAccExo.y;
     deltaFreeAcc.z = freeAccLimb.z - freeAccExo.z;
     
-    accNorm = sqrt((deltaFreeAcc.x)*(deltaFreeAcc.x) + (deltaFreeAcc.y)*(deltaFreeAcc.y) + (deltaFreeAcc.z)*(deltaFreeAcc.z));
+    float accNorm = sqrt((deltaFreeAcc.x)*(deltaFreeAcc.x) + (deltaFreeAcc.y)*(deltaFreeAcc.y) + (deltaFreeAcc.z)*(deltaFreeAcc.z));
+
+    ROS_INFO_STREAM("Subcribed on " << sublimb.getTopic() << ", " << subexo.getTopic());
 
     ros::Publisher torque = node.advertise<std_msgs::Float32>("desired_torque", 1000);
-
+    //ros::Rate pub_loop = 100;
+    
     std_msgs::Float32 dtorque;
     dtorque.data = 1.0*accNorm;
 
     torque.publish(dtorque);
-    
+    ROS_INFO_STREAM("Publishing on " << torque.getTopic());
+
     /*
     while (ros::ok())
     {

@@ -75,7 +75,7 @@ int main(int argc, char *argv[])
 	ros::init(argc, argv, "mt_w_driver");
 	ros::NodeHandle node;
 
-    const int desiredUpdateRate = 100;	// Use 100 Hz update rate for MTWs
+    const int desiredUpdateRate = 120;	// Use 120 Hz update rate for MTWs, 150 Hz crashes!
 	const int desiredRadioChannel = 25;	// Use radio channel 25 for wireless master.
 
 	WirelessMasterCallback wirelessMasterCallback; // Callback for wireless master
@@ -216,6 +216,8 @@ int main(int argc, char *argv[])
 
         if (interruption)
         {
+			wirelessMasterDevice->gotoConfig();
+			wirelessMasterDevice->disableRadio();
             throw std::runtime_error("\naborting\n");
         }
 
@@ -265,11 +267,10 @@ int main(int argc, char *argv[])
         ros::V_Publisher fAcc_publishers;
         ros::Rate loop_rate = 400;
 		/* 
-		Desired 200 Hz per MTw, but ROS is throttling at 100 Hz
-		rostopic hz shows around 100 Hz
-		Although, echoing the /free_acc topic has more latency with low loop_rate
+		Desired 200 Hz per MTw, but the Awinda throttles at the desiredUpdateRate
+		rostopic hz shows around 120 Hz for each MTw
+		Although, echoing the /free_acc topic has less latency with higher loop_rate values
 		*/ 
-		int packetbytes;
 
         for (int i = 0; i < (int)mtwDevices.size(); ++i)
         {
@@ -300,8 +301,6 @@ int main(int argc, char *argv[])
             	            msg.header.stamp = ros::Time::now();
             	            msg.header.frame_id = frame_id;
 
-							packetbytes = packet->toMessage().getTotalMessageSize();
-
             	            msg.vector.x = packet->freeAcceleration().value(0);
             	            msg.vector.y = packet->freeAcceleration().value(1);
             	            msg.vector.z = packet->freeAcceleration().value(2);
@@ -320,9 +319,6 @@ int main(int argc, char *argv[])
 			}
             ros::spinOnce();
             loop_rate.sleep();
-
-			ROS_INFO("Packet size: %d B", packetbytes);
-
             //ROS_INFO_STREAM("Publishing at " << 1/loop_rate.cycleTime().toSec() << " Hz"); // it is printing around 2500 Hz
         }
 
