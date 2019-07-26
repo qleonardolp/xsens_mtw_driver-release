@@ -30,18 +30,16 @@ $ rosrun xsens_mtw_driver mt_w_node
     - xsens_mtw_node: "segmentation fault (core dumped)" on spinFor();
     - ~~xsens_mtw_node_out: print (propably) the sensor readings straight on the node terminal (caution);~~
     - acc_based_control: Properly subscribing on the /free_acc_0034232**X** topics but don't publish the output yet;
-    ```
-    $ rosrun xsens_mtw_driver acc_based_control 2 4
 
-    [ INFO] [1564165886.074107919]: Subcribed on /free_acc_00342322, /free_acc_00342324
-
-    [ INFO] [1564165886.075439489]: Publishing on /desired_torque
-    ```
-    ```
-    $ rostopic hz /desired_torque
-
-    no new messages
-    ```
+```
+$ rosrun xsens_mtw_driver acc_based_control 2 4
+[ INFO] [1564165886.074107919]: Subcribed on /free_acc_00342322, /free_acc_00342324
+[ INFO] [1564165886.075439489]: Publishing on /desired_torque
+```
+```
+$ rostopic hz /desired_torque
+no new messages
+```
 
 ## ToDo
 
