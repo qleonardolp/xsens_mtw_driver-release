@@ -159,18 +159,6 @@ add_executable(xsens_mtw_node
   src/myxda.cpp
 )
 
-add_executable(xsens_mtw_node_out 
-  src/mtw_node_main_out.cpp
-  src/xdainterfaceout.cpp
-  src/xdacallback.cpp
-  src/mastercallback.cpp
-  src/mtwcallback.cpp
-  src/findClosestUpdateRate.cpp
-  src/conio.c
-  src/console.cpp
-  src/myxda.cpp
-)
-
 add_executable(mt_w_node
   src/mt_w_main.cpp
   src/mastercallback.cpp
@@ -179,6 +167,10 @@ add_executable(mt_w_node
   src/conio.c
   src/console.cpp
   src/myxda.cpp
+)
+
+add_executable(acc_based_control
+  forceEstimation/accBasedControl.cpp
 )
 
 ## Rename C++ executable without prefix
@@ -200,7 +192,7 @@ target_link_libraries(xsens_mtw_node
   ${catkin_LIBRARIES}
 )
 
-target_link_libraries(xsens_mtw_node_out
+target_link_libraries(mt_w_node
   xsensdeviceapi
   xstypes
   pthread
@@ -208,9 +200,7 @@ target_link_libraries(xsens_mtw_node_out
   ${catkin_LIBRARIES}
 )
 
-target_link_libraries(mt_w_node
-  xsensdeviceapi
-  xstypes
+target_link_libraries(acc_based_control
   pthread
   dl
   ${catkin_LIBRARIES}

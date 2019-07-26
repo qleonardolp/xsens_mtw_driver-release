@@ -269,6 +269,7 @@ int main(int argc, char *argv[])
 		rostopic hz shows around 100 Hz
 		Although, echoing the /free_acc topic has more latency with low loop_rate
 		*/ 
+		int packetbytes;
 
         for (int i = 0; i < (int)mtwDevices.size(); ++i)
         {
@@ -299,6 +300,8 @@ int main(int argc, char *argv[])
             	            msg.header.stamp = ros::Time::now();
             	            msg.header.frame_id = frame_id;
 
+							packetbytes = packet->toMessage().getTotalMessageSize();
+
             	            msg.vector.x = packet->freeAcceleration().value(0);
             	            msg.vector.y = packet->freeAcceleration().value(1);
             	            msg.vector.z = packet->freeAcceleration().value(2);
@@ -317,6 +320,9 @@ int main(int argc, char *argv[])
 			}
             ros::spinOnce();
             loop_rate.sleep();
+
+			ROS_INFO("Packet size: %d B", packetbytes);
+
             //ROS_INFO_STREAM("Publishing at " << 1/loop_rate.cycleTime().toSec() << " Hz"); // it is printing around 2500 Hz
         }
 
