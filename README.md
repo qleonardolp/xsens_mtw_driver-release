@@ -13,8 +13,8 @@ connection with the Awinda base (USB port). Development based on [Xsens MTw SDK 
 
 ## Goals
 
-- Read at least two accelerometers and publish free_acceleration @ 200 Hz is apparently impossible once the 'rostopic hz'
-is bounded by the 'desiredUpdateRate' value set to the Xsens Awinda Station. The maximun value that works with two MTw is 120 Hz.
+- Read at least two accelerometers and publish free_acceleration @ 200 Hz is apparently impossible once the `rostopic hz`
+is bounded by the "desiredUpdateRate" value set to the Xsens Awinda Station. The maximun value that works with two MTw is 120 Hz.
 
 ## Usage
 
@@ -32,11 +32,14 @@ $ rosrun xsens_mtw_driver mt_w_node
     - acc_based_control: Properly subscribing on the /free_acc_0034232**X** topics but don't publish the output yet;
     ```
     $ rosrun xsens_mtw_driver acc_based_control 2 4
+
     [ INFO] [1564165886.074107919]: Subcribed on /free_acc_00342322, /free_acc_00342324
+
     [ INFO] [1564165886.075439489]: Publishing on /desired_torque
     ```
     ```
     $ rostopic hz /desired_torque
+
     no new messages
     ```
 
@@ -44,8 +47,8 @@ $ rosrun xsens_mtw_driver mt_w_node
 
 - [x] Publisher Vector per MTw (`ros::V_Publisher`);
 - [ ] Study the mastercallback, mtwcallback and the in-build ROS callbacks;
-- ~~[ ] Enhance the callbacks to reduce the spinOnce() duration;~~
-- ~~[ ] Achieve 200 Hz per sensor;~~
+- [ ] ~~Enhance the callbacks to reduce the spinOnce() duration;~~
+- [ ] ~~Achieve 200 Hz per sensor;~~
 - [ ] Develop a node that process the difference between the free accelerations of two MTw and do some math with (acc_based_control);
 
 
