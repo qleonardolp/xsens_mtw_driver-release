@@ -262,6 +262,35 @@ int main(int argc, char *argv[])
 			mtwDevices[i]->addCallbackHandler(mtwCallbacks[i]);
 		}
 
+		ROS_INFO("Calibrating Free Acceleration...");
+
+		XsVector Gravity;
+		Gravity.setZero();
+		XsVector averageMTwGrav;
+		averageMTwGrav.setZero();
+		int max_count = 500000;
+
+		XsTime::msleep(600);
+
+		for (int count = 1; count <= max_count; count++)
+		{
+			for (size_t i = 0; i < mtwCallbacks.size(); i++)
+			{
+				if (mtwCallbacks[i]->dataAvailable())
+				{
+					if (mtwCallbacks[i]->getOldestPacket()->containsCalibratedAcceleration())
+					{
+						averageMTwGrav = averageMTwGrav + mtwCallbacks[i]->getOldestPacket()->calibratedAcceleration();
+					}
+				}
+			}
+			averageMTwGrav = averageMTwGrav * (1 / (int)mtwCallbacks.size());
+
+			Gravity = Gravity + averageMTwGrav*(1 / max_count);
+		}
+		XsDataPacket CalibrationPkt;
+		CalibrationPkt.setFreeAcceleration(Gravity);
+
         ROS_INFO("Publish loop starting...");
 
         ros::V_Publisher fAcc_publishers;
