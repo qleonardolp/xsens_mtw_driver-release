@@ -24,6 +24,7 @@ class SubTwoMTwPubTorque
             mtwExoObject = nh.subscribe<geometry_msgs::Vector3Stamped>("free_acc_0034232" + mtwexo, queueSize, &SubTwoMTwPubTorque::mtwExoCallback, this);
             
             ROS_INFO_STREAM("Subcribed on " << mtwLimbObject.getTopic() << ", " << mtwExoObject.getTopic());
+            ROS_INFO_STREAM("Publishing on " << desTorqueObject.getTopic());
         }
 
         void mtwLimbCallback(const geometry_msgs::Vector3Stamped::ConstPtr& msg)
