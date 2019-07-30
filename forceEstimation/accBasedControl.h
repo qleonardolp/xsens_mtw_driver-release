@@ -13,15 +13,15 @@
 #include <geometry_msgs/Vector3Stamped.h>
 
 
-class TwoMTwSubForcePub
+class SubTwoMTwPubTorque
 {
     public:
-        TwoMTwSubForcePub() {}
-        TwoMTwSubForcePub(std::string const mtwlimb, std::string const mtwexo, int queueSize)
+        SubTwoMTwPubTorque() {}
+        SubTwoMTwPubTorque(std::string const mtwlimb, std::string const mtwexo, int queueSize)
         {
             desTorqueObject = nh.advertise<std_msgs::Float32>("desired_Torque", queueSize);
-            mtwLimbObject = nh.subscribe<geometry_msgs::Vector3Stamped>("free_acc_0034232" + mtwlimb, queueSize, &TwoMTwSubForcePub::mtwLimbCallback, this);
-            mtwExoObject = nh.subscribe<geometry_msgs::Vector3Stamped>("free_acc_0034232" + mtwexo, queueSize, &TwoMTwSubForcePub::mtwExoCallback, this);
+            mtwLimbObject = nh.subscribe<geometry_msgs::Vector3Stamped>("free_acc_0034232" + mtwlimb, queueSize, &SubTwoMTwPubTorque::mtwLimbCallback, this);
+            mtwExoObject = nh.subscribe<geometry_msgs::Vector3Stamped>("free_acc_0034232" + mtwexo, queueSize, &SubTwoMTwPubTorque::mtwExoCallback, this);
             
             ROS_INFO_STREAM("Subcribed on " << mtwLimbObject.getTopic() << ", " << mtwExoObject.getTopic());
         }
