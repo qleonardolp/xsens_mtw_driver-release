@@ -264,32 +264,37 @@ int main(int argc, char *argv[])
 
 		ROS_INFO("Calibrating Free Acceleration...");
 
-		XsVector Gravity;
-		Gravity.setZero();
 		XsVector averageMTwGrav;
-		averageMTwGrav.setZero();
 		int max_count = 500000;
 
 		XsTime::msleep(600);
 
-		for (int count = 1; count <= max_count; count++)
+		for (size_t i = 0; i < mtwCallbacks.size(); i++)
 		{
-			for (size_t i = 0; i < mtwCallbacks.size(); i++)
+			averageMTwGrav.setZero();
+			XsDataPacket CalibrationPkt;
+			CalibrationPkt.setDeviceId(mtwCallbacks[i]->device().deviceId());
+
+			for (int count = 0; count < max_count; count++)
 			{
 				if (mtwCallbacks[i]->dataAvailable())
 				{
-					if (mtwCallbacks[i]->getOldestPacket()->containsCalibratedAcceleration())
+					if (mtwCallbacks[i]->getOldestPacket()->containsRawAcceleration())
 					{
-						averageMTwGrav = averageMTwGrav + mtwCallbacks[i]->getOldestPacket()->calibratedAcceleration();
+						averageMTwGrav = averageMTwGrav + (1 / max_count) * mtwCallbacks[i]->getOldestPacket()->rawAccelerationConverted();
 					}
 				}
 			}
-			averageMTwGrav = averageMTwGrav * (1 / (int)mtwCallbacks.size());
-
-			Gravity = Gravity + averageMTwGrav*(1 / max_count);
+			/*
+			float x_gravity = (float) averageMTwGrav.value(0);
+			float y_gravity = (float) averageMTwGrav.value(1);
+			float z_gravity = (float) averageMTwGrav.value(2);
+			ROS_INFO_STREAM("rawGravity " << mtwCallbacks[i]->device().deviceId().toString() 
+			<< " x: " << x_gravity << " y: " << y_gravity << " z: " << z_gravity);
+			*/
+			CalibrationPkt.setFreeAcceleration(averageMTwGrav);
+			
 		}
-		XsDataPacket CalibrationPkt;
-		CalibrationPkt.setFreeAcceleration(Gravity);
 
         ROS_INFO("Publish loop starting...");
 
