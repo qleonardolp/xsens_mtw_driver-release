@@ -19,49 +19,73 @@ class SubTwoMTwPubTorque
         SubTwoMTwPubTorque() {}
         SubTwoMTwPubTorque(std::string const mtwlimb, std::string const mtwexo, int queueSize)
         {
-            desTorqueObject = nh.advertise<std_msgs::Float32>("desired_Torque", queueSize);
-            mtwLimbObject = nh.subscribe<geometry_msgs::Vector3Stamped>("free_acc_0034232" + mtwlimb, queueSize, &SubTwoMTwPubTorque::mtwLimbCallback, this);
-            mtwExoObject = nh.subscribe<geometry_msgs::Vector3Stamped>("free_acc_0034232" + mtwexo, queueSize, &SubTwoMTwPubTorque::mtwExoCallback, this);
+            mtwLimbObject.resize(2);
+            mtwExoObject.resize(2);     // Subscribers vectors for Limb and Exo sized in 2, each catching two data types: free_acc and gyroscope_
             
-            ROS_INFO_STREAM("Subcribed on " << mtwLimbObject.getTopic() << ", " << mtwExoObject.getTopic());
+            desTorqueObject = nh.advertise<std_msgs::Float32>("desired_Torque", queueSize);
+
+            mtwLimbObject[0] = nh.subscribe<geometry_msgs::Vector3Stamped>("free_acc_0034232" + mtwlimb, queueSize, &SubTwoMTwPubTorque::mtwLimbAccCB, this);
+            mtwExoObject[0] = nh.subscribe<geometry_msgs::Vector3Stamped>("free_acc_0034232" + mtwexo, queueSize, &SubTwoMTwPubTorque::mtwExoAccCB, this);
+
+            mtwLimbObject[1] = nh.subscribe<geometry_msgs::Vector3Stamped>("gyroscope_" + mtwlimb, queueSize, &SubTwoMTwPubTorque::mtwLimbVelCB, this);
+            mtwExoObject[1] = nh.subscribe<geometry_msgs::Vector3Stamped>("gyroscope_" + mtwexo, queueSize, &SubTwoMTwPubTorque::mtwExoVelCB, this);
+            
+            ROS_INFO_STREAM("Subcribed on " << mtwLimbObject[0].getTopic() << ", " << mtwLimbObject[1].getTopic());
+            ROS_INFO_STREAM("Subcribed on " << mtwExoObject[0].getTopic() << ", " << mtwExoObject[1].getTopic());
             ROS_INFO_STREAM("Publishing on " << desTorqueObject.getTopic());
         }
 
-        void mtwLimbCallback(const geometry_msgs::Vector3Stamped::ConstPtr& msg)
+        void mtwLimbAccCB(const geometry_msgs::Vector3Stamped::ConstPtr& msg)
         {
             AccLimb = msg->vector;
         }
-        void mtwExoCallback(const geometry_msgs::Vector3Stamped::ConstPtr& msg)
+
+        void mtwExoAccCB(const geometry_msgs::Vector3Stamped::ConstPtr& msg)
         {
             AccExo = msg->vector;
+        }
 
-            deltaAcc.x = AccExo.x - AccLimb.x;
-            deltaAcc.y = AccExo.y - AccLimb.y;
-            deltaAcc.z = AccExo.z - AccLimb.z;
+        void mtwLimbVelCB(const geometry_msgs::Vector3Stamped::ConstPtr& msg)
+        {
+            VelLimb = msg->vector;
+        }
 
-            deltaAccNorm = sqrt((deltaAcc.x)*(deltaAcc.x) + (deltaAcc.y)*(deltaAcc.y) + (deltaAcc.z)*(deltaAcc.z));
-            /*
-             * -- Conversion from the accNorm [m/s^2] to the dtorque [Nm] --
-             *  Maxon Motor Parameter
-             *  Type Power 150 [W]
-             *  Nominal Voltage 48 [V]
-             *  No load speed 7590 [rpm]
-             *  Nominal Torque (max) 0.187 [Nm]
-             */
-            desTorque.data = 1.0*deltaAccNorm;
+        void mtwExoVelCB(const geometry_msgs::Vector3Stamped::ConstPtr& msg)
+        {
+            VelExo = msg->vector;
+            desTorque.data = inertiaMomentExo*(1/mtw_dist)*AccLimb.y + Kp*(1/mtw_dist)*(AccLimb.y - AccExo.y) + Ki*(VelLimb.y - VelExo.y);
+            
             desTorqueObject.publish(desTorque);
         }
 
     private:
-        geometry_msgs::Vector3 deltaAcc;        //vetor para armazenar a diferença entre os dois sensores
+
         geometry_msgs::Vector3 AccLimb;         // Limb acc, [m/s^2]
         geometry_msgs::Vector3 AccExo;          // Exo acc, [m/s^2]
-        std_msgs::Float32 desTorque;            // Desired Torque [Nm] 
-        float deltaAccNorm;                     // Norm of the deltaAcc vector
 
+        geometry_msgs::Vector3 VelLimb;         // Limb Velocity, [rad/s]
+        geometry_msgs::Vector3 VelExo;          // Exo Velocity, [rad/s]
+
+        std_msgs::Float32 desTorque;            // Desired Torque Pub [Nm] 
+
+        float inertiaMomentExo = 123*10^(-4);   // [Kg.m^2]
+        float Kp = 12;                          // [???], maybe Kg.m^2
+        float Ki = 45;                          // [???], maybe Kg.m^2/s
+        float mtw_dist = 0.32;                  // [m]
+
+
+        /*
+         * -- Conversion from the accNorm [m/s^2] to the dtorque [Nm] --
+         *  Maxon Motor Parameter
+         *  Type Power 150 [W]
+         *  Nominal Voltage 48 [V]
+         *  No load speed 7590 [rpm]
+         *  Nominal Torque (max) 0.187 [Nm]
+         */
+        
     protected:
-        ros::Subscriber mtwLimbObject;
-        ros::Subscriber mtwExoObject;
+        ros::V_Subscriber mtwLimbObject;
+        ros::V_Subscriber mtwExoObject;
         ros::Publisher desTorqueObject;
         ros::NodeHandle nh;
 };
