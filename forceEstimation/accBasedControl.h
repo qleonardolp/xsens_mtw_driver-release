@@ -27,8 +27,8 @@ class SubTwoMTwPubTorque
             mtwLimbObject[0] = nh.subscribe<geometry_msgs::Vector3Stamped>("free_acc_0034232" + mtwlimb, queueSize, &SubTwoMTwPubTorque::mtwLimbAccCB, this);
             mtwExoObject[0] = nh.subscribe<geometry_msgs::Vector3Stamped>("free_acc_0034232" + mtwexo, queueSize, &SubTwoMTwPubTorque::mtwExoAccCB, this);
 
-            mtwLimbObject[1] = nh.subscribe<geometry_msgs::Vector3Stamped>("gyroscope_" + mtwlimb, queueSize, &SubTwoMTwPubTorque::mtwLimbVelCB, this);
-            mtwExoObject[1] = nh.subscribe<geometry_msgs::Vector3Stamped>("gyroscope_" + mtwexo, queueSize, &SubTwoMTwPubTorque::mtwExoVelCB, this);
+            mtwLimbObject[1] = nh.subscribe<geometry_msgs::Vector3Stamped>("gyroscope_0034232" + mtwlimb, queueSize, &SubTwoMTwPubTorque::mtwLimbVelCB, this);
+            mtwExoObject[1] = nh.subscribe<geometry_msgs::Vector3Stamped>("gyroscope_0034232" + mtwexo, queueSize, &SubTwoMTwPubTorque::mtwExoVelCB, this);
             
             ROS_INFO_STREAM("Subcribed on " << mtwLimbObject[0].getTopic() << ", " << mtwLimbObject[1].getTopic());
             ROS_INFO_STREAM("Subcribed on " << mtwExoObject[0].getTopic() << ", " << mtwExoObject[1].getTopic());
