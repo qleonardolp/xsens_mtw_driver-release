@@ -299,7 +299,6 @@ int main(int argc, char *argv[])
         ROS_INFO("Publish loop starting...");
 
         ros::V_Publisher freeAcc_pubs;
-		ros::V_Publisher velocity_pubs;
 		ros::V_Publisher gyros_pubs;
         ros::Rate loop_rate = 480;
 		/* 
@@ -314,9 +313,6 @@ int main(int argc, char *argv[])
 
             ros::Publisher fAcc_pub = node.advertise<geometry_msgs::Vector3Stamped>("free_acc_" + mtwID , 1000);
             freeAcc_pubs.push_back(fAcc_pub);
-
-			ros::Publisher vel_pub = node.advertise<geometry_msgs::Vector3Stamped>("velocity_" + mtwID, 1000);
-			velocity_pubs.push_back(vel_pub);
 
 			ros::Publisher gyro_pub = node.advertise<geometry_msgs::Vector3Stamped>("gyroscope_" + mtwID, 1000);
 			gyros_pubs.push_back(gyro_pub);
@@ -350,23 +346,6 @@ int main(int argc, char *argv[])
 
             	            freeAcc_pubs[i].publish(msg);
             	        }
-						
-						if(packet->containsVelocity())
-						{
-							geometry_msgs::Vector3Stamped vel_msg;
-
-            	            std::string frame_id = DEFAULT_FRAME_ID;
-            	            ros::param::getCached("~frame_id", frame_id);
-
-            	            vel_msg.header.stamp = ros::Time::now();
-            	            vel_msg.header.frame_id = frame_id;
-
-            	            vel_msg.vector.x = packet->velocity().value(0);		// [m/s]
-            	            vel_msg.vector.y = packet->velocity().value(1);		// [m/s]
-            	            vel_msg.vector.z = packet->velocity().value(2);		// [m/s]
-
-            	            velocity_pubs[i].publish(vel_msg);
-						}
 
 						if(packet->containsCalibratedGyroscopeData())
 						{
