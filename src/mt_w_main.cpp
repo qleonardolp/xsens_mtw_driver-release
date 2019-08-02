@@ -298,8 +298,10 @@ int main(int argc, char *argv[])
 
         ROS_INFO("Publish loop starting...");
 
-        ros::V_Publisher fAcc_publishers;
-        ros::Rate loop_rate = 400;
+        ros::V_Publisher freeAcc_pubs;
+		ros::V_Publisher velocity_pubs;
+		ros::V_Publisher gyros_pubs;
+        ros::Rate loop_rate = 480;
 		/* 
 		Desired 200 Hz per MTw, but the Awinda throttles at the desiredUpdateRate
 		rostopic hz shows around 120 Hz for each MTw
@@ -309,8 +311,15 @@ int main(int argc, char *argv[])
         for (int i = 0; i < (int)mtwDevices.size(); ++i)
         {
             std::string mtwID = mtwDeviceIds[i].toString().toStdString();
+
             ros::Publisher fAcc_pub = node.advertise<geometry_msgs::Vector3Stamped>("free_acc_" + mtwID , 1000);
-            fAcc_publishers.push_back(fAcc_pub);
+            freeAcc_pubs.push_back(fAcc_pub);
+
+			ros::Publisher vel_pub = node.advertise<geometry_msgs::Vector3Stamped>("velocity_" + mtwID, 1000);
+			velocity_pubs.push_back(vel_pub);
+
+			ros::Publisher gyro_pub = node.advertise<geometry_msgs::Vector3Stamped>("gyroscope_" + mtwID, 1000);
+			gyros_pubs.push_back(gyro_pub);
         }
         
 		ROS_INFO("Publishers started, press 's' to stop!");
@@ -324,7 +333,7 @@ int main(int argc, char *argv[])
             	    if (mtwCallbacks[i]->dataAvailable())
             	    {
             	        XsDataPacket const * packet = mtwCallbacks[i]->getOldestPacket();
-
+						
             	        if (packet->containsFreeAcceleration())
             	        {
             	            geometry_msgs::Vector3Stamped msg;
@@ -335,12 +344,46 @@ int main(int argc, char *argv[])
             	            msg.header.stamp = ros::Time::now();
             	            msg.header.frame_id = frame_id;
 
-            	            msg.vector.x = packet->freeAcceleration().value(0);
-            	            msg.vector.y = packet->freeAcceleration().value(1);
-            	            msg.vector.z = packet->freeAcceleration().value(2);
+            	            msg.vector.x = packet->freeAcceleration().value(0);		// [m/s²]
+            	            msg.vector.y = packet->freeAcceleration().value(1);		// [m/s²]
+            	            msg.vector.z = packet->freeAcceleration().value(2);		// [m/s²]
 
-            	            fAcc_publishers[i].publish(msg);
+            	            freeAcc_pubs[i].publish(msg);
             	        }
+						
+						if(packet->containsVelocity())
+						{
+							geometry_msgs::Vector3Stamped vel_msg;
+
+            	            std::string frame_id = DEFAULT_FRAME_ID;
+            	            ros::param::getCached("~frame_id", frame_id);
+
+            	            vel_msg.header.stamp = ros::Time::now();
+            	            vel_msg.header.frame_id = frame_id;
+
+            	            vel_msg.vector.x = packet->velocity().value(0);		// [m/s]
+            	            vel_msg.vector.y = packet->velocity().value(1);		// [m/s]
+            	            vel_msg.vector.z = packet->velocity().value(2);		// [m/s]
+
+            	            velocity_pubs[i].publish(vel_msg);
+						}
+
+						if(packet->containsCalibratedGyroscopeData())
+						{
+							geometry_msgs::Vector3Stamped gyro_msg;
+
+            	            std::string frame_id = DEFAULT_FRAME_ID;
+            	            ros::param::getCached("~frame_id", frame_id);
+
+            	            gyro_msg.header.stamp = ros::Time::now();
+            	            gyro_msg.header.frame_id = frame_id;
+
+            	            gyro_msg.vector.x = packet->calibratedGyroscopeData().value(0);		// [rad/s]
+            	            gyro_msg.vector.y = packet->calibratedGyroscopeData().value(1);		// [rad/s]
+            	            gyro_msg.vector.z = packet->calibratedGyroscopeData().value(2);		// [rad/s]
+
+            	            gyros_pubs[i].publish(gyro_msg);
+						}
 
             	        mtwCallbacks[i]->deleteOldestPacket();
             	    }
