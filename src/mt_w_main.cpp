@@ -337,8 +337,8 @@ int main(int argc, char *argv[])
             	            std::string frame_id = DEFAULT_FRAME_ID;
             	            ros::param::getCached("~frame_id", frame_id);
 
-            	            msg.header.stamp = ros::Time::now();
-            	            msg.header.frame_id = frame_id;
+            	            msg.header.stamp.toSec = ros::Time::now().toSec();
+            	            msg.header.frame_id = frame_id + "_" + mtwDeviceIds[i].toString().toStdString();
 
             	            msg.vector.x = packet->freeAcceleration().value(0);		// [m/s²]
             	            msg.vector.y = packet->freeAcceleration().value(1);		// [m/s²]
@@ -354,8 +354,8 @@ int main(int argc, char *argv[])
             	            std::string frame_id = DEFAULT_FRAME_ID;
             	            ros::param::getCached("~frame_id", frame_id);
 
-            	            gyro_msg.header.stamp = ros::Time::now();
-            	            gyro_msg.header.frame_id = frame_id;
+            	            gyro_msg.header.stamp.toSec = ros::Time::now().toSec();
+            	            gyro_msg.header.frame_id = frame_id + "_" + mtwDeviceIds[i].toString().toStdString();
 
             	            gyro_msg.vector.x = packet->calibratedGyroscopeData().value(0);		// [rad/s]
             	            gyro_msg.vector.y = packet->calibratedGyroscopeData().value(1);		// [rad/s]
