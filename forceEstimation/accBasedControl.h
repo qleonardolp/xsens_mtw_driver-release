@@ -53,7 +53,7 @@ class SubTwoMTwPubTorque
         void mtwExoVelCB(const geometry_msgs::Vector3Stamped::ConstPtr& msg)
         {
             VelExo = msg->vector;
-            desTorque.data = inertiaMomentExo*(1/mtw_dist)*AccLimb.y + Kp*(1/mtw_dist)*(AccLimb.y - AccExo.y) + Ki*(VelLimb.y - VelExo.y);
+            desTorque.data = inertiaMomentExo*(1/mtw_dist)*AccLimb.y + Kp*(1/mtw_dist)*(AccLimb.y - AccExo.y) + Ki*(VelLimb.z - VelExo.z);
             
             desTorqueObject.publish(desTorque);
         }
@@ -71,7 +71,7 @@ class SubTwoMTwPubTorque
         float inertiaMomentExo = 123*10^(-4);   // [Kg.m^2]
         float Kp = 12;                          // [???], maybe Kg.m^2
         float Ki = 45;                          // [???], maybe Kg.m^2/s
-        float mtw_dist = 0.32;                  // [m]
+        float mtw_dist = 0.215;                  // [m]
 
 
         /*
