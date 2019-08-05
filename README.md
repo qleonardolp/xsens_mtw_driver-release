@@ -89,4 +89,4 @@ Checking the Xsens license...
 
 ## Trivia
 
-![Torque Demo](media/Torque_demo.gif)
+![Torque Demo](media/torque_demo.mp4)
