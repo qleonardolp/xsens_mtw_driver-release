@@ -13,13 +13,16 @@ connection with the Awinda base (USB port). Development based on [Xsens MTw SDK 
 
 ## Goals
 
-- _Read at least two accelerometers and publish free_acceleration @ 200 Hz_: is apparently impossible once the `rostopic hz`
-is bounded by the "desiredUpdateRate" value set to the Xsens Awinda Station. The maximun value that works with two MTw is 120 Hz.
+- _Read at least two accelerometers and publish free_acceleration @ 200 Hz_ : is apparently impossible once the publication rate
+is bounded by the `desiredUpdateRate` value set to the **Xsens Awinda Station**. The maximun value that works with two MTw is 120 Hz as suggested
+on Xsens Awinda User Manual.
+- _Read free_acceleration and gyroscope data_ : done at 120 Hz for both data for two sensors.
 
 ## Usage
 
 - All dependencies (.h, .so, .c, .cpp) are on this folder structure. The CMakelist file is already configured. Clone this repository into
 catkin_ws/src and do catkin_make. 
+
 - To run the working node:
 
 ```
@@ -29,16 +32,19 @@ $ rosrun xsens_mtw_driver mt_w_node
 - The other nodes DO NOT work properly
     - xsens_mtw_node: "segmentation fault (core dumped)" on spinFor();
     - ~~xsens_mtw_node_out: print (propably) the sensor readings straight on the node terminal (caution);~~
-    - acc_based_control: Properly subscribing on the /free_acc_0034232**X** topics but don't publish the output yet;
+
+- The **acc_based_control** is the node to calculate a disered Torque in a joint to minimize the interaction force between an exosuit and the user...
 
 ```
-$ rosrun xsens_mtw_driver acc_based_control 2 4
-[ INFO] [1564165886.074107919]: Subcribed on /free_acc_00342322, /free_acc_00342324
-[ INFO] [1564165886.075439489]: Publishing on /desired_torque
+$ rosrun xsens_mtw_driver acc_based_control 322 324
+[ INFO] [1565029477.102853201]: Subcribed on /free_acc_00342322, /gyroscope_00342322
+[ INFO] [1565029477.102920144]: Subcribed on /free_acc_00342324, /gyroscope_00342324
+[ INFO] [1565029477.102941354]: Publishing on /desired_Torque
 ```
 ```
 $ rostopic hz /desired_torque
-no new messages
+average rate: 120.034
+        ...
 ```
 
 ## ToDo
