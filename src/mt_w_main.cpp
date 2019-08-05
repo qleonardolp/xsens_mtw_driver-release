@@ -324,6 +324,8 @@ int main(int argc, char *argv[])
         {
 			if (!_kbhit())
 			{
+				ros::Time beginning = ros::Time::now();			// time reference to get the messages delay after each pub loop start
+
 				for (size_t i = 0; i < mtwCallbacks.size(); ++i)
             	{
             	    if (mtwCallbacks[i]->dataAvailable())
@@ -337,7 +339,7 @@ int main(int argc, char *argv[])
             	            std::string frame_id = DEFAULT_FRAME_ID;
             	            ros::param::getCached("~frame_id", frame_id);
 
-            	            msg.header.stamp.toSec = ros::Time::now().toSec();
+            	            msg.header.stamp.fromSec(ros::Time::now().toSec() - beginning.toSec());
             	            msg.header.frame_id = frame_id + "_" + mtwDeviceIds[i].toString().toStdString();
 
             	            msg.vector.x = packet->freeAcceleration().value(0);		// [m/s²]
@@ -354,7 +356,7 @@ int main(int argc, char *argv[])
             	            std::string frame_id = DEFAULT_FRAME_ID;
             	            ros::param::getCached("~frame_id", frame_id);
 
-            	            gyro_msg.header.stamp.toSec = ros::Time::now().toSec();
+            	            gyro_msg.header.stamp.fromSec(ros::Time::now().toSec() - beginning.toSec());
             	            gyro_msg.header.frame_id = frame_id + "_" + mtwDeviceIds[i].toString().toStdString();
 
             	            gyro_msg.vector.x = packet->calibratedGyroscopeData().value(0);		// [rad/s]
