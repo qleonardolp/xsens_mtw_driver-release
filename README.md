@@ -86,3 +86,7 @@ $ newgrp dialout
 ## License
 
 Checking the Xsens license...
+
+## Trivia
+
+![Torque Demo](media/Torque_demo.gif)
