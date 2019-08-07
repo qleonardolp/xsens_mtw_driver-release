@@ -33,7 +33,7 @@ $ rosrun xsens_mtw_driver mt_w_node
     - xsens_mtw_node: "segmentation fault (core dumped)" on spinFor();
     - ~~xsens_mtw_node_out: print (propably) the sensor readings straight on the node terminal (caution);~~
 
-- The **acc_based_control** is the node to calculate a disered Torque in a joint to minimize the interaction force between an exosuit and the user...
+- The **acc_based_control** is the node to calculate a desired Torque in a joint to minimize the interaction force between an exosuit and the user...
 
 ```
 $ rosrun xsens_mtw_driver acc_based_control 322 324
