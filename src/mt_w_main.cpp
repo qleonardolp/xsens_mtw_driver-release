@@ -298,6 +298,7 @@ int main(int argc, char *argv[])
 
         ROS_INFO("Publish loop starting...");
 
+		ros::AsyncSpinner spinner(4);			// four threaded spinner
         ros::V_Publisher freeAcc_pubs;
 		ros::V_Publisher gyros_pubs;
         ros::Rate loop_rate = 480;
@@ -320,6 +321,7 @@ int main(int argc, char *argv[])
         
 		ROS_INFO("Publishers started, press 's' to stop!");
 
+		spinner.start();
         while (ros::ok())
         {
 			if (!_kbhit())
@@ -375,9 +377,8 @@ int main(int argc, char *argv[])
 				if((char)_getch() == 's')
 					break;
 			}
-            ros::spinOnce();
+            //ros::spinOnce();
             loop_rate.sleep();
-            //ROS_INFO_STREAM("Publishing at " << 1/loop_rate.cycleTime().toSec() << " Hz"); // it is printing around 2500 Hz
         }
 
 		ROS_INFO("Setting config mode...");
