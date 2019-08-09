@@ -27,7 +27,7 @@
 */
 
 #include <ros/ros.h>
-#include "messagepublishers/packetcallback.h"
+//#include "messagepublishers/packetcallback.h"
 #include <geometry_msgs/Vector3Stamped.h>
 #include "mastercallback.h"
 #include "mtwcallback.h"
@@ -338,7 +338,7 @@ int main(int argc, char *argv[])
             	        {
             	            geometry_msgs::Vector3Stamped msg;
 
-            	            std::string frame_id = DEFAULT_FRAME_ID;
+            	            std::string frame_id = std::to_string( mtwCallbacks[i]->getMtwIndex() );
             	            ros::param::getCached("~frame_id", frame_id);
 
             	            msg.header.stamp.fromSec(ros::Time::now().toSec() - beginning.toSec());
@@ -355,7 +355,7 @@ int main(int argc, char *argv[])
 						{
 							geometry_msgs::Vector3Stamped gyro_msg;
 
-            	            std::string frame_id = DEFAULT_FRAME_ID;
+            	            std::string frame_id = std::to_string( mtwCallbacks[i]->getMtwIndex() );
             	            ros::param::getCached("~frame_id", frame_id);
 
             	            gyro_msg.header.stamp.fromSec(ros::Time::now().toSec() - beginning.toSec());
