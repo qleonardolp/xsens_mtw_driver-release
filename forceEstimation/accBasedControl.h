@@ -11,52 +11,67 @@
 #include <ros/ros.h>
 #include <std_msgs/Float32.h>
 #include <geometry_msgs/Vector3Stamped.h>
+#include <ros/callback_queue.h>
 
 
-class SubTwoMTwPubTorque
+class accBasedControl
 {
     public:
-        SubTwoMTwPubTorque() {}
-        SubTwoMTwPubTorque(std::string const mtwlimb, std::string const mtwexo, int queueSize)
-        {
+        accBasedControl() {}
+        accBasedControl(std::string const mtwlimb, std::string const mtwexo, int queueSize)
+        {   
+            nh.setCallbackQueue(&m_CallbackQueue);
+
             mtwLimbObject.resize(2);
             mtwExoObject.resize(2);     // Subscribers vectors for Limb and Exo sized in 2, each catching two data types: free_acc and gyroscope_
             
             desTorqueObject = nh.advertise<std_msgs::Float32>("desired_Torque", queueSize);
 
-            mtwLimbObject[0] = nh.subscribe<geometry_msgs::Vector3Stamped>("free_acc_0034232" + mtwlimb, queueSize, &SubTwoMTwPubTorque::mtwLimbAccCB, this);
-            mtwExoObject[0] = nh.subscribe<geometry_msgs::Vector3Stamped>("free_acc_0034232" + mtwexo, queueSize, &SubTwoMTwPubTorque::mtwExoAccCB, this);
+            mtwLimbObject[0] = nh.subscribe<geometry_msgs::Vector3Stamped>("free_acc_0034232" + mtwlimb, queueSize, &accBasedControl::mtwLimbAccCB, this);
+            mtwExoObject[0] = nh.subscribe<geometry_msgs::Vector3Stamped>("free_acc_0034232" + mtwexo, queueSize, &accBasedControl::mtwExoAccCB, this);
 
-            mtwLimbObject[1] = nh.subscribe<geometry_msgs::Vector3Stamped>("gyroscope_0034232" + mtwlimb, queueSize, &SubTwoMTwPubTorque::mtwLimbVelCB, this);
-            mtwExoObject[1] = nh.subscribe<geometry_msgs::Vector3Stamped>("gyroscope_0034232" + mtwexo, queueSize, &SubTwoMTwPubTorque::mtwExoVelCB, this);
+            mtwLimbObject[1] = nh.subscribe<geometry_msgs::Vector3Stamped>("gyroscope_0034232" + mtwlimb, queueSize, &accBasedControl::mtwLimbVelCB, this);
+            mtwExoObject[1] = nh.subscribe<geometry_msgs::Vector3Stamped>("gyroscope_0034232" + mtwexo, queueSize, &accBasedControl::mtwExoVelCB, this);
             
             ROS_INFO_STREAM("Subcribed on " << mtwLimbObject[0].getTopic() << ", " << mtwLimbObject[1].getTopic());
             ROS_INFO_STREAM("Subcribed on " << mtwExoObject[0].getTopic() << ", " << mtwExoObject[1].getTopic());
             ROS_INFO_STREAM("Publishing on " << desTorqueObject.getTopic());
+            
+            /*
+            if (m_CallbackQueue.isEmpty())
+            {
+                ROS_INFO_STREAM("Callbacks Queue is empty!");
+            }
+            */      
         }
 
         void mtwLimbAccCB(const geometry_msgs::Vector3Stamped::ConstPtr& msg)
         {
             AccLimb = msg->vector;
+            //ROS_INFO("0");
         }
 
         void mtwExoAccCB(const geometry_msgs::Vector3Stamped::ConstPtr& msg)
         {
             AccExo = msg->vector;
+            //ROS_INFO("1");
         }
 
         void mtwLimbVelCB(const geometry_msgs::Vector3Stamped::ConstPtr& msg)
         {
             VelLimb = msg->vector;
+            //ROS_INFO("2");
         }
 
         void mtwExoVelCB(const geometry_msgs::Vector3Stamped::ConstPtr& msg)
         {
             VelExo = msg->vector;
             desTorque.data = inertiaMomentExo*(1/mtw_dist)*AccLimb.y + Kp*(1/mtw_dist)*(AccLimb.y - AccExo.y) + Ki*(VelLimb.z - VelExo.z);
-            
+            //ROS_INFO("3");
             desTorqueObject.publish(desTorque);
         }
+
+        ros::CallbackQueue m_CallbackQueue;
 
     private:
 
