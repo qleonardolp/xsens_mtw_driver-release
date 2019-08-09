@@ -20,15 +20,19 @@ on Xsens Awinda User Manual.
 
 ## Usage
 
-- All dependencies (.h, .so, .c, .cpp) are on this folder structure. The CMakelist file is already configured. Clone this repository into
-catkin_ws/src and do catkin_make. 
+- All dependencies (libraries, headers and sources files) are in this folder structure. The CMakelist file is already configured. Clone this repository into
+catkin_ws/src and do `catkin_make`. 
 
-- To run the working node:
+    - Connect the Awinda Station USB in your computer and run the MTw Driver node: `$ rosrun xsens_mtw_driver mt_w_node`
+
+    - Undock the MTW sensor and wait until the wireless connection being established: 
 
 ```
-$ rosrun xsens_mtw_driver mt_w_node
-```
+[ INFO] [1565393292.619168658]: Waiting for MTW to wirelessly connect...
+[ INFO] [1565393436.611962400]: EVENT: MTW Connected -> 00342322
+[ INFO] [1565393436.615162761]: Number of connected MTWs: 1. Press 'y' to start measurement or 'q' to end node.
 
+```
 - The other nodes DO NOT work properly
     - xsens_mtw_node: "segmentation fault (core dumped)" on spinFor();
     - ~~xsens_mtw_node_out: print (propably) the sensor readings straight on the node terminal (caution);~~
@@ -42,7 +46,7 @@ $ rosrun xsens_mtw_driver acc_based_control 322 324
 [ INFO] [1565029477.102941354]: Publishing on /desired_Torque
 ```
 ```
-$ rostopic hz /desired_torque
+$ rostopic hz /desired_Torque
 average rate: 120.034
         ...
 ```
@@ -85,7 +89,7 @@ $ newgrp dialout
 
 ## License
 
-Checking the Xsens license...
+Checking the Xsens license... (wip)
 
 ## Trivia
 
