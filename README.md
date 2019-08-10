@@ -58,7 +58,8 @@ average rate: 120.034
 - [ ] ~~Enhance the callbacks to reduce the spinOnce() duration;~~
 - [ ] ~~Achieve 200 Hz per sensor;~~
 - [x] Develop a node that process the difference between the free accelerations of two MTw and do some math with (acc_based_control);
-- [ ] Calibrate the sensors through in-build SDK methods or through statistical data analyzed from an rosbag on /free_acc_0034232**X** topics;
+- [ ] Calibrate the sensors through in-build SDK methods or through statistical data analyzed from an rosbag;
+- [ ] Configure the sensors to output the accelerations relative to a sensor-fixed frame;
 
 
 ## Contribute
