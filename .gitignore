@@ -5,5 +5,11 @@ xda_c_cpp/
 src/mtw_node_main_out.cpp
 src/xdainterfaceout.cpp
 src/xdainterfaceout.h
+src/mtw_node_main.cpp
+src/xdainterface.cpp
+src/xdacallback.cpp
+src/xdainterface.h
+src/xdacallback.h
+src/main.cpp
 src/messagepublishers
 bags/

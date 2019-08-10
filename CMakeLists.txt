@@ -121,7 +121,7 @@ catkin_package(
 include_directories(
   include
   src
-  src/messagepublishers
+# src/messagepublishers
   ${catkin_INCLUDE_DIRS}
 )
 
@@ -146,17 +146,17 @@ add_dependencies(${catkin_EXPORTED_TARGETS})
 ## The recommended prefix ensures that target names across packages don't collide
 # add_executable(${PROJECT_NAME}_node src/xsens_mtw_driver_node.cpp)
 
-add_executable(xsens_mtw_node 
-  src/mtw_node_main.cpp
-  src/xdainterface.cpp
-  src/xdacallback.cpp
-  src/mastercallback.cpp
-  src/mtwcallback.cpp
-  src/findClosestUpdateRate.cpp
-  src/conio.c
-  src/console.cpp
-  src/myxda.cpp
-)
+#add_executable(xsens_mtw_node 
+#  src/mtw_node_main.cpp
+#  src/xdainterface.cpp
+#  src/xdacallback.cpp
+#  src/mastercallback.cpp
+#  src/mtwcallback.cpp
+#  src/findClosestUpdateRate.cpp
+#  src/conio.c
+#  src/console.cpp
+#  src/myxda.cpp
+#)
 
 add_executable(mt_w_node
   src/mt_w_main.cpp
@@ -183,13 +183,14 @@ add_executable(acc_based_control
 # add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
-target_link_libraries(xsens_mtw_node
-  xsensdeviceapi
-  xstypes
-  pthread
-  dl
-  ${catkin_LIBRARIES}
-)
+
+#target_link_libraries(xsens_mtw_node
+#  xsensdeviceapi
+#  xstypes
+#  pthread
+#  dl
+#  ${catkin_LIBRARIES}
+#)
 
 target_link_libraries(mt_w_node
   xsensdeviceapi

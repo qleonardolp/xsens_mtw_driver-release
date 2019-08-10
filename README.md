@@ -34,7 +34,7 @@ catkin_ws/src and do `catkin_make`.
 
 ```
 - The other nodes DO NOT work properly
-    - xsens_mtw_node: "segmentation fault (core dumped)" on spinFor();
+    - ~~xsens_mtw_node: "segmentation fault (core dumped)" on spinFor();~~
     - ~~xsens_mtw_node_out: print (propably) the sensor readings straight on the node terminal (caution);~~
 
 - The **acc_based_control** is the node to calculate a desired Torque in a joint to minimize the interaction force between an exosuit and the user...
