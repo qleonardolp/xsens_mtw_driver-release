@@ -27,7 +27,7 @@
 */
 
 #include <ros/ros.h>
-//#include "messagepublishers/packetcallback.h"
+#include <sensor_msgs/Imu.h>
 #include <geometry_msgs/Vector3Stamped.h>
 #include "mastercallback.h"
 #include "mtwcallback.h"
@@ -171,6 +171,12 @@ int main(int argc, char *argv[])
 			}
 		}
 
+		/*
+		ROS_INFO_STREAM("Setting output mode for docked MTw...");
+		wirelessMasterDevice->
+
+		*/
+
         ROS_INFO_STREAM("Setting radio channel to " << desiredRadioChannel << " and enabling radio...");
          if (!wirelessMasterDevice->enableRadio(desiredRadioChannel))
 		{
@@ -221,13 +227,7 @@ int main(int argc, char *argv[])
             throw std::runtime_error("\naborting\n");
         }
 
-        ROS_INFO("Starting measurement...");
-        if (!wirelessMasterDevice->gotoMeasurement())
-		{
-			std::ostringstream error;
-			error << "Failed to goto measurement mode: " << *wirelessMasterDevice;
-			throw std::runtime_error(error.str());
-		}
+        
 
         ROS_INFO("Getting XsDevice instances for all MTWs...");
 	    XsDeviceIdArray allDeviceIds = control->deviceIds();
@@ -262,6 +262,23 @@ int main(int argc, char *argv[])
 			mtwDevices[i]->addCallbackHandler(mtwCallbacks[i]);
 		}
 
+		XsDeviceMode desiredMode;
+		XsOutputMode desiredOutput = XOM_Calibrated & XOM_Velocity & XOM_Orientation;
+		XsOutputSettings desiredSettings = XS_DEFAULT_OUTPUT_SETTINGS & XOS_CalibratedMode_AccGyrOnly & XOS_VelocityMode_Ms_Xyz;
+		desiredMode.setOutputMode(desiredOutput);
+		desiredMode.setOutputSettings(desiredSettings);
+		desiredMode.setPeriodAndSkipFactor(0 ,0);
+		desiredMode.setOrientationMode(OM_None);
+
+		ROS_INFO("Setting the desired OutputMode and OutputSettings... ");
+
+		for (int i = 0; i < mtwDevices.size(); i++)
+		{
+			if(!mtwDevices[i]->setDeviceMode(desiredMode))
+				ROS_WARN("Failed to set the desired OutputMode");
+		}
+		
+
 		ROS_INFO("Calibrating Free Acceleration...");
 
 		XsVector averageMTwGrav;
@@ -285,15 +302,22 @@ int main(int argc, char *argv[])
 					}
 				}
 			}
+			
+			std::vector<double> gravity = averageMTwGrav.toVector();
 			/*
-			float x_gravity = (float) averageMTwGrav.value(0);
-			float y_gravity = (float) averageMTwGrav.value(1);
-			float z_gravity = (float) averageMTwGrav.value(2);
 			ROS_INFO_STREAM("rawGravity " << mtwCallbacks[i]->device().deviceId().toString() 
-			<< " x: " << x_gravity << " y: " << y_gravity << " z: " << z_gravity);
+			<< " x: " << gravity[0] << " y: " << gravity[1] << " z: " << gravity[2]);
 			*/
 			CalibrationPkt.setFreeAcceleration(averageMTwGrav);
 			
+		}
+
+		ROS_INFO("Starting measurement...");
+        if (!wirelessMasterDevice->gotoMeasurement())
+		{
+			std::ostringstream error;
+			error << "Failed to goto measurement mode: " << *wirelessMasterDevice;
+			throw std::runtime_error(error.str());
 		}
 
         ROS_INFO("Publish loop starting...");
