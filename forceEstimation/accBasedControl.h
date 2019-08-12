@@ -24,8 +24,13 @@ class accBasedControl
 
             mtwLimbObject.resize(2);
             mtwExoObject.resize(2);     // Subscribers vectors for Limb and Exo sized in 2, each catching two data types: free_acc and gyroscope_
+	        desTorqueObject.resize(4);
             
-            desTorqueObject = nh.advertise<std_msgs::Float32>("desired_Torque", queueSize);
+            desTorqueObject[0] = nh.advertise<std_msgs::Float32>("desired_Torque", queueSize);
+	        desTorqueObject[1] = nh.advertise<std_msgs::Float32>("Torque_Distur", queueSize);
+	        desTorqueObject[2] = nh.advertise<std_msgs::Float32>("Torque_Kp", queueSize);
+	        desTorqueObject[3] = nh.advertise<std_msgs::Float32>("Torque_Ki", queueSize);
+
 
             mtwLimbObject[0] = nh.subscribe<geometry_msgs::Vector3Stamped>("free_acc_0034232" + mtwlimb, queueSize, &accBasedControl::mtwLimbAccCB, this);
             mtwExoObject[0] = nh.subscribe<geometry_msgs::Vector3Stamped>("free_acc_0034232" + mtwexo, queueSize, &accBasedControl::mtwExoAccCB, this);
@@ -35,7 +40,7 @@ class accBasedControl
             
             ROS_INFO_STREAM("Subcribed on " << mtwLimbObject[0].getTopic() << ", " << mtwLimbObject[1].getTopic());
             ROS_INFO_STREAM("Subcribed on " << mtwExoObject[0].getTopic() << ", " << mtwExoObject[1].getTopic());
-            ROS_INFO_STREAM("Publishing on " << desTorqueObject.getTopic());
+            ROS_INFO_STREAM("Publishing on " << desTorqueObject[0].getTopic());
             
             /*
             if (m_CallbackQueue.isEmpty())
@@ -66,9 +71,20 @@ class accBasedControl
         void mtwExoVelCB(const geometry_msgs::Vector3Stamped::ConstPtr& msg)
         {
             VelExo = msg->vector;
-            desTorque.data = inertiaMomentExo*(1/mtw_dist)*AccLimb.y + Kp*(1/mtw_dist)*(AccLimb.y - AccExo.y) + Ki*(VelLimb.z - VelExo.z);
-            //ROS_INFO("3");
-            desTorqueObject.publish(desTorque);
+            // desTorque.data = inertiaMomentExo*(1/mtw_dist)*AccLimb.y + Kp*(1/mtw_dist)*(AccLimb.y - AccExo.y) + Ki*(VelLimb.z - VelExo.z);
+	        desTorque.data = 1*AccLimb.y + 1*(AccLimb.y - AccExo.y) + 1*(VelLimb.z - VelExo.z);
+	        desTorqueObject[0].publish(desTorque);
+
+	        desTorque.data = AccLimb.y;
+	        desTorqueObject[1].publish(desTorque);
+
+	        desTorque.data = AccLimb.y - AccExo.y;
+       	    desTorqueObject[2].publish(desTorque);
+
+	        desTorque.data = VelLimb.z - VelExo.z;
+	        desTorqueObject[3].publish(desTorque);
+            // ROS_INFO("3");
+            // desTorqueObject.publish(desTorque);
         }
 
         ros::CallbackQueue m_CallbackQueue;
@@ -101,7 +117,7 @@ class accBasedControl
     protected:
         ros::V_Subscriber mtwLimbObject;
         ros::V_Subscriber mtwExoObject;
-        ros::Publisher desTorqueObject;
+        ros::V_Publisher desTorqueObject;
         ros::NodeHandle nh;
 };
 
