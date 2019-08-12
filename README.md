@@ -1,6 +1,6 @@
 # Xsens MTw driver using ROS-Kinetic
 
-This project aim to develop an driver on which the Xsens MTw sensors send the data in topics published through an main node managing the
+This project aims to develop a driver on which the Xsens MTw sensors send the data in topics published through an main node managing the
 connection with the Awinda base (USB port). Development based on [Xsens MTw SDK 4.6](https://www.xsens.com/mt-software-suite-mtw-awinda/).
 
 ### Hardware
