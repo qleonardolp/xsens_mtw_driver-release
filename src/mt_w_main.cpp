@@ -262,55 +262,34 @@ int main(int argc, char *argv[])
 			mtwDevices[i]->addCallbackHandler(mtwCallbacks[i]);
 		}
 
-		XsDeviceMode desiredMode;
-		XsOutputMode desiredOutput = XOM_Calibrated & XOM_Velocity & XOM_Orientation;
-		XsOutputSettings desiredSettings = XS_DEFAULT_OUTPUT_SETTINGS & XOS_CalibratedMode_AccGyrOnly & XOS_VelocityMode_Ms_Xyz;
-		desiredMode.setOutputMode(desiredOutput);
-		desiredMode.setOutputSettings(desiredSettings);
-		desiredMode.setPeriodAndSkipFactor(0 ,0);
-		desiredMode.setOrientationMode(OM_None);
+		// This block has no apparent effect on the measurements
+		//////////////////////////////////////////////////////////////////
+
+		XsOutputMode desiredOutput = XOM_Calibrated & XOM_Orientation;
+		XsOutputSettings desiredSettings = XOS_Timestamp_PacketCounter & XOS_OrientationMode_Matrix & XOS_CalibratedMode_AccGyrOnly;
 
 		ROS_INFO("Setting the desired OutputMode and OutputSettings... ");
 
 		for (int i = 0; i < mtwDevices.size(); i++)
 		{
-			if(!mtwDevices[i]->setDeviceMode(desiredMode))
+			if( !control->device(mtwDeviceIds[i])->setOutputMode(desiredOutput) )
 				ROS_WARN("Failed to set the desired OutputMode");
-		}
-		
 
-		ROS_INFO("Calibrating Free Acceleration...");
+			if( !control->device(mtwDeviceIds[i])->setOutputSettings(desiredSettings) )
+				ROS_WARN("Failed to set the desired OutputSettings");
 
-		XsVector averageMTwGrav;
-		int max_count = 500000;
-
-		XsTime::msleep(600);
-
-		for (size_t i = 0; i < mtwCallbacks.size(); i++)
-		{
-			averageMTwGrav.setZero();
-			XsDataPacket CalibrationPkt;
-			CalibrationPkt.setDeviceId(mtwCallbacks[i]->device().deviceId());
-
-			for (int count = 0; count < max_count; count++)
+			if(control->device(mtwDeviceIds[i])->isInLegacyMode())
 			{
-				if (mtwCallbacks[i]->dataAvailable())
-				{
-					if (mtwCallbacks[i]->getOldestPacket()->containsRawAcceleration())
-					{
-						averageMTwGrav = averageMTwGrav + (1 / max_count) * mtwCallbacks[i]->getOldestPacket()->rawAccelerationConverted();
-					}
-				}
+				ROS_INFO_STREAM(mtwDeviceIds[i].toString() << " is in LegacyMode");
+
+				XsOutputMode mtw_output_mode = control->device(mtwDeviceIds[i])->outputMode();
+				XsOutputSettings mtw_output_settings = control->device(mtwDeviceIds[i])->outputSettings();
+
+				ROS_INFO_STREAM( mtw_output_mode << " " << mtw_output_settings );
+
 			}
-			
-			std::vector<double> gravity = averageMTwGrav.toVector();
-			/*
-			ROS_INFO_STREAM("rawGravity " << mtwCallbacks[i]->device().deviceId().toString() 
-			<< " x: " << gravity[0] << " y: " << gravity[1] << " z: " << gravity[2]);
-			*/
-			CalibrationPkt.setFreeAcceleration(averageMTwGrav);
-			
 		}
+		///////////////////////////////////////////////////////////////////
 
 		ROS_INFO("Starting measurement...");
         if (!wirelessMasterDevice->gotoMeasurement())
@@ -322,12 +301,15 @@ int main(int argc, char *argv[])
 
         ROS_INFO("Publish loop starting...");
 
-		ros::AsyncSpinner spinner(4);			// four threaded spinner
-        ros::V_Publisher freeAcc_pubs;
-		ros::V_Publisher gyros_pubs;
-        ros::Rate loop_rate = 480;
+		ros::AsyncSpinner spinner( mtwCallbacks.size() );			// threaded spinner, one thread per MTw
+        //ros::V_Publisher freeAcc_pubs;
+		//ros::V_Publisher gyros_pubs;
+		ros::V_Publisher imu_pubs;
+        ros::Rate loop_rate = 900;
+		ros::Time beginning;
+
 		/* 
-		Desired 200 Hz per MTw, but the Awinda throttles at the desiredUpdateRate
+		Awinda Station Hardware throttles at the desiredUpdateRate
 		rostopic hz shows around 120 Hz for each MTw
 		Although, echoing the /free_acc topic has less latency with higher loop_rate values
 		*/ 
@@ -335,22 +317,29 @@ int main(int argc, char *argv[])
         for (int i = 0; i < (int)mtwDevices.size(); ++i)
         {
             std::string mtwID = mtwDeviceIds[i].toString().toStdString();
-
+			
+			/*
             ros::Publisher fAcc_pub = node.advertise<geometry_msgs::Vector3Stamped>("free_acc_" + mtwID , 1000);
             freeAcc_pubs.push_back(fAcc_pub);
 
 			ros::Publisher gyro_pub = node.advertise<geometry_msgs::Vector3Stamped>("gyroscope_" + mtwID, 1000);
 			gyros_pubs.push_back(gyro_pub);
+			*/
+
+			ros::Publisher imu_pub = node.advertise<sensor_msgs::Imu>("imu_" + mtwID, 1000);
+			imu_pubs.push_back(imu_pub);
         }
         
 		ROS_INFO("Publishers started, press 's' to stop!");
 
 		spinner.start();
+
+		beginning = ros::Time::now();
+
         while (ros::ok())
         {
 			if (!_kbhit())
 			{
-				ros::Time beginning = ros::Time::now();			// time reference to get the messages delay after each pub loop start
 
 				for (size_t i = 0; i < mtwCallbacks.size(); ++i)
             	{
@@ -358,6 +347,7 @@ int main(int argc, char *argv[])
             	    {
             	        XsDataPacket const * packet = mtwCallbacks[i]->getOldestPacket();
 						
+						/*
             	        if (packet->containsFreeAcceleration())
             	        {
             	            geometry_msgs::Vector3Stamped msg;
@@ -391,10 +381,41 @@ int main(int argc, char *argv[])
 
             	            gyros_pubs[i].publish(gyro_msg);
 						}
+						*/
 
+						if (packet->containsCalibratedData())
+						{
+							sensor_msgs::Imu imu_msg;
+
+							imu_msg.header.frame_id = "imu_" + mtwDeviceIds[i].toString().toStdString();
+
+							imu_msg.linear_acceleration.x = packet->calibratedAcceleration().value(0);	// [m/s²]
+							imu_msg.linear_acceleration.y = packet->calibratedAcceleration().value(1);	// [m/s²]
+							imu_msg.linear_acceleration.z = packet->calibratedAcceleration().value(2);	// [m/s²]
+							imu_msg.linear_acceleration_covariance[0] = -1; 
+
+							imu_msg.angular_velocity.x = packet->calibratedGyroscopeData().value(0);	// [rad/s]
+							imu_msg.angular_velocity.y = packet->calibratedGyroscopeData().value(1);	// [rad/s]
+							imu_msg.angular_velocity.z = packet->calibratedGyroscopeData().value(2);	// [rad/s]
+							imu_msg.angular_velocity_covariance[0] = -1;
+
+							imu_msg.orientation.x = packet->orientationQuaternion().x();				// unit quaternion
+							imu_msg.orientation.y = packet->orientationQuaternion().y();				// unit quaternion
+							imu_msg.orientation.z = packet->orientationQuaternion().z();				// unit quaternion
+							imu_msg.orientation.w = packet->orientationQuaternion().w();				// unit quaternion
+							imu_msg.orientation_covariance[0] = -1;
+
+							imu_msg.header.stamp.fromSec(ros::Time::now().toSec() - beginning.toSec());	// [nsecs]
+
+							imu_pubs[i].publish(imu_msg);
+						}
+						
             	        mtwCallbacks[i]->deleteOldestPacket();
             	    }
             	}
+
+				beginning = ros::Time::now();	// time reference to get the messages delay after each publication loop
+
 			}
 			else
 			{
