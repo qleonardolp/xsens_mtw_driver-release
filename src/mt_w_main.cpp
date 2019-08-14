@@ -302,10 +302,8 @@ int main(int argc, char *argv[])
         ROS_INFO("Publish loop starting...");
 
 		ros::AsyncSpinner spinner( mtwCallbacks.size() );			// threaded spinner, one thread per MTw
-        //ros::V_Publisher freeAcc_pubs;
-		//ros::V_Publisher gyros_pubs;
 		ros::V_Publisher imu_pubs;
-        ros::Rate loop_rate = 900;
+        ros::Rate loop_rate = 2000;
 		ros::Time beginning;
 
 		/* 
@@ -317,16 +315,8 @@ int main(int argc, char *argv[])
         for (int i = 0; i < (int)mtwDevices.size(); ++i)
         {
             std::string mtwID = mtwDeviceIds[i].toString().toStdString();
-			
-			/*
-            ros::Publisher fAcc_pub = node.advertise<geometry_msgs::Vector3Stamped>("free_acc_" + mtwID , 1000);
-            freeAcc_pubs.push_back(fAcc_pub);
 
-			ros::Publisher gyro_pub = node.advertise<geometry_msgs::Vector3Stamped>("gyroscope_" + mtwID, 1000);
-			gyros_pubs.push_back(gyro_pub);
-			*/
-
-			ros::Publisher imu_pub = node.advertise<sensor_msgs::Imu>("imu_" + mtwID, 1000);
+			ros::Publisher imu_pub = node.advertise<sensor_msgs::Imu>("imu_" + mtwID, 10);
 			imu_pubs.push_back(imu_pub);
         }
         
@@ -348,22 +338,6 @@ int main(int argc, char *argv[])
             	        XsDataPacket const * packet = mtwCallbacks[i]->getOldestPacket();
 						
 						/*
-            	        if (packet->containsFreeAcceleration())
-            	        {
-            	            geometry_msgs::Vector3Stamped msg;
-
-            	            std::string frame_id = std::to_string( mtwCallbacks[i]->getMtwIndex() );
-            	            ros::param::getCached("~frame_id", frame_id);
-
-            	            msg.header.stamp.fromSec(ros::Time::now().toSec() - beginning.toSec());
-            	            msg.header.frame_id = frame_id + "_" + mtwDeviceIds[i].toString().toStdString();
-
-            	            msg.vector.x = packet->freeAcceleration().value(0);		// [m/s²]
-            	            msg.vector.y = packet->freeAcceleration().value(1);		// [m/s²]
-            	            msg.vector.z = packet->freeAcceleration().value(2);		// [m/s²]
-
-            	            freeAcc_pubs[i].publish(msg);
-            	        }
 
 						if(packet->containsCalibratedGyroscopeData())
 						{

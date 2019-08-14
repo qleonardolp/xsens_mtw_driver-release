@@ -33,17 +33,12 @@ catkin_ws/src and do `catkin_make`.
 [ INFO] [1565393436.615162761]: Number of connected MTWs: 1. Press 'y' to start measurement or 'q' to end node.
 
 ```
-- The other nodes DO NOT work properly
-    - ~~xsens_mtw_node: "segmentation fault (core dumped)" on spinFor();~~
-    - ~~xsens_mtw_node_out: print (propably) the sensor readings straight on the node terminal (caution);~~
-
 - The **acc_based_control** is the node to calculate a desired Torque in a joint to minimize the interaction force between an exosuit and the user...
 
 ```
-$ rosrun xsens_mtw_driver acc_based_control 322 324
-[ INFO] [1565029477.102853201]: Subcribed on /free_acc_00342322, /gyroscope_00342322
-[ INFO] [1565029477.102920144]: Subcribed on /free_acc_00342324, /gyroscope_00342324
-[ INFO] [1565029477.102941354]: Publishing on /desired_Torque
+$ rosrun xsens_mtw_driver acc_based_control 324 323
+[ INFO] [1565821614.756475631]: Subcribed on /imu_00342324, /imu_00342323
+[ INFO] [1565821614.756544099]: Publishing on /desired_Torque
 ```
 ```
 $ rostopic hz /desired_Torque
@@ -53,7 +48,7 @@ average rate: 120.034
 
 ## ToDo
 
-- [ ] Update messages type on accBasedControl node, using `sensor_msgs::Imu` from now on;
+- [x] Update messages type on accBasedControl node, using `sensor_msgs::Imu` from now on;
 - [ ] Study the mastercallback, mtwcallback and the in-build ROS callbacks;
 - [x] Develop a node that process the difference between the free accelerations of two MTw and do some math with (acc_based_control);
 - [ ] Calibrate the sensors through in-build SDK methods or through statistical data analyzed from an rosbag;

@@ -1,17 +1,32 @@
-#ifndef ACC_BASED_CONTROL_H
-#define ACC_BASED_CONTROL_H
-
 /*
  * Class to build a SubcriberPublisher Node,
  * as seen on youtu.be/lR3cK9ZoAF8
+ * 
+ * Leonardo Felipe Lima Santos dos Santos, 2019
+ * e-mail leonardo.felipe.santos@usp.br
+ * github/bitbucket qleonardolp
  */
+
+
+#ifndef ACC_BASED_CONTROL_H
+#define ACC_BASED_CONTROL_H
+
 
 #include <string>
 #include <math.h>
 #include <ros/ros.h>
 #include <std_msgs/Float32.h>
+#include <std_msgs/String.h>
 #include <geometry_msgs/Vector3Stamped.h>
+#include <sensor_msgs/Imu.h>
 #include <ros/callback_queue.h>
+
+#define     GRAVITY           9.810
+#define     INERTIA_EXO       1.000             // [Kg.m^2]
+#define     MTW_DIST_LIMB     0.255             // [m]
+#define     MTW_DIST_EXO      1.000             // [m]
+#define     KP                1.000             // [Kg.m^2]
+#define     KI                1.000             // [Kg.m^2/s]
 
 
 class accBasedControl
@@ -22,69 +37,70 @@ class accBasedControl
         {   
             nh.setCallbackQueue(&m_CallbackQueue);
 
-            mtwLimbObject.resize(2);
-            mtwExoObject.resize(2);     // Subscribers vectors for Limb and Exo sized in 2, each catching two data types: free_acc and gyroscope_
 	        desTorqueObject.resize(4);
-            
             desTorqueObject[0] = nh.advertise<std_msgs::Float32>("desired_Torque", queueSize);
-	        desTorqueObject[1] = nh.advertise<std_msgs::Float32>("Torque_Distur", queueSize);
+	        desTorqueObject[1] = nh.advertise<std_msgs::Float32>("Torque_Input", queueSize);
 	        desTorqueObject[2] = nh.advertise<std_msgs::Float32>("Torque_Kp", queueSize);
 	        desTorqueObject[3] = nh.advertise<std_msgs::Float32>("Torque_Ki", queueSize);
 
+            auxDataObj = nh.advertise<std_msgs::String>("aux_data", queueSize);
 
-            mtwLimbObject[0] = nh.subscribe<geometry_msgs::Vector3Stamped>("free_acc_0034232" + mtwlimb, queueSize, &accBasedControl::mtwLimbAccCB, this);
-            mtwExoObject[0] = nh.subscribe<geometry_msgs::Vector3Stamped>("free_acc_0034232" + mtwexo, queueSize, &accBasedControl::mtwExoAccCB, this);
-
-            mtwLimbObject[1] = nh.subscribe<geometry_msgs::Vector3Stamped>("gyroscope_0034232" + mtwlimb, queueSize, &accBasedControl::mtwLimbVelCB, this);
-            mtwExoObject[1] = nh.subscribe<geometry_msgs::Vector3Stamped>("gyroscope_0034232" + mtwexo, queueSize, &accBasedControl::mtwExoVelCB, this);
+            mtwLimbObject = nh.subscribe<sensor_msgs::Imu>("imu_0034232" + mtwlimb, queueSize, &accBasedControl::mtwLimbCB, this);
+            mtwExoObject = nh.subscribe<sensor_msgs::Imu>("imu_0034232" + mtwexo, queueSize, &accBasedControl::mtwExoCB, this);
             
-            ROS_INFO_STREAM("Subcribed on " << mtwLimbObject[0].getTopic() << ", " << mtwLimbObject[1].getTopic());
-            ROS_INFO_STREAM("Subcribed on " << mtwExoObject[0].getTopic() << ", " << mtwExoObject[1].getTopic());
-            ROS_INFO_STREAM("Publishing on " << desTorqueObject[0].getTopic());
-            
-            /*
-            if (m_CallbackQueue.isEmpty())
-            {
-                ROS_INFO_STREAM("Callbacks Queue is empty!");
-            }
-            */      
+            ROS_INFO_STREAM("Subcribed on " << mtwLimbObject.getTopic() << ", " << mtwExoObject.getTopic());
+            ROS_INFO_STREAM("Publishing on " << desTorqueObject[0].getTopic());    
         }
 
-        void mtwLimbAccCB(const geometry_msgs::Vector3Stamped::ConstPtr& msg)
+
+        void mtwLimbCB( const sensor_msgs::Imu::ConstPtr& mtw_msg)
         {
-            AccLimb = msg->vector;
-            //ROS_INFO("0");
+            AccLimb.x = (mtw_msg->angular_velocity.z)*(mtw_msg->angular_velocity.z)*MTW_DIST_LIMB;
+            float theta_aux = asin((AccLimb.x - mtw_msg->linear_acceleration.x)/GRAVITY);
+
+            if(isnanf(theta_aux) != 1)
+                theta_g_limb = theta_aux;
+
+            AccLimb.y = mtw_msg->linear_acceleration.y + GRAVITY * cos(theta_g_limb);
+
+            VelLimb = mtw_msg->angular_velocity;
+
+            ///// auxData is acc_y, acc_T, theta_g, gyro_z /////
+
+            auxData.data = std::to_string(mtw_msg->linear_acceleration.y) + "," + std::to_string(AccLimb.y)
+            + "," + std::to_string(180 * theta_g_limb/ M_PI) + "," + std::to_string(mtw_msg->angular_velocity.z); 
+
+            auxDataObj.publish(auxData);
+
+            ////////////////////////////////////////////////////
+
+            //ROS_INFO_STREAM("theta_g_limb: " << 180 * theta_g_limb/ M_PI);
+
         }
 
-        void mtwExoAccCB(const geometry_msgs::Vector3Stamped::ConstPtr& msg)
+        void mtwExoCB( const sensor_msgs::Imu::ConstPtr& mtw_msg)
         {
-            AccExo = msg->vector;
-            //ROS_INFO("1");
-        }
+            AccExo.x = (mtw_msg->angular_velocity.z)*(mtw_msg->angular_velocity.z)*MTW_DIST_EXO;
+            float theta_aux = asin((AccExo.x - mtw_msg->linear_acceleration.x)/GRAVITY);
 
-        void mtwLimbVelCB(const geometry_msgs::Vector3Stamped::ConstPtr& msg)
-        {
-            VelLimb = msg->vector;
-            //ROS_INFO("2");
-        }
+            if(isnanf(theta_aux) != 1)
+                theta_g_exo = theta_aux;
 
-        void mtwExoVelCB(const geometry_msgs::Vector3Stamped::ConstPtr& msg)
-        {
-            VelExo = msg->vector;
-            // desTorque.data = inertiaMomentExo*(1/mtw_dist)*AccLimb.y + Kp*(1/mtw_dist)*(AccLimb.y - AccExo.y) + Ki*(VelLimb.z - VelExo.z);
-	        desTorque.data = 1*AccLimb.y + 1*(AccLimb.y - AccExo.y) + 1*(VelLimb.z - VelExo.z);
+            AccExo.y = mtw_msg->linear_acceleration.y + GRAVITY * cos(theta_g_exo);   
+
+            VelExo = mtw_msg->angular_velocity;
+
+            desTorque.data = INERTIA_EXO*(1/MTW_DIST_LIMB)*AccLimb.y + KP*( (1/MTW_DIST_LIMB)*AccLimb.y - (1/MTW_DIST_EXO)*AccExo.y ) + KI*(VelLimb.z - VelExo.z);
 	        desTorqueObject[0].publish(desTorque);
 
-	        desTorque.data = AccLimb.y;
+	        desTorque.data = INERTIA_EXO*(1/MTW_DIST_LIMB)*AccLimb.y;
 	        desTorqueObject[1].publish(desTorque);
 
-	        desTorque.data = AccLimb.y - AccExo.y;
+	        desTorque.data = KP*( (1/MTW_DIST_LIMB)*AccLimb.y - (1/MTW_DIST_EXO)*AccExo.y );
        	    desTorqueObject[2].publish(desTorque);
 
-	        desTorque.data = VelLimb.z - VelExo.z;
+	        desTorque.data = KI*(VelLimb.z - VelExo.z);
 	        desTorqueObject[3].publish(desTorque);
-            // ROS_INFO("3");
-            // desTorqueObject.publish(desTorque);
         }
 
         ros::CallbackQueue m_CallbackQueue;
@@ -99,10 +115,10 @@ class accBasedControl
 
         std_msgs::Float32 desTorque;            // Desired Torque Pub [Nm] 
 
-        float inertiaMomentExo = 123*10^(-4);   // [Kg.m^2]
-        float Kp = 12;                          // [???], maybe Kg.m^2
-        float Ki = 45;                          // [???], maybe Kg.m^2/s
-        float mtw_dist = 0.215;                  // [m]
+        std_msgs::String auxData;
+
+        float theta_g_limb;                     // [rad]
+        float theta_g_exo;                      // [rad]
 
 
         /*
@@ -115,9 +131,10 @@ class accBasedControl
          */
         
     protected:
-        ros::V_Subscriber mtwLimbObject;
-        ros::V_Subscriber mtwExoObject;
+        ros::Subscriber mtwLimbObject;
+        ros::Subscriber mtwExoObject;
         ros::V_Publisher desTorqueObject;
+        ros::Publisher auxDataObj;
         ros::NodeHandle nh;
 };
 

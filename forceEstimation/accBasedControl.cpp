@@ -10,11 +10,9 @@
 
 #include <ros/ros.h>
 #include <std_msgs/Float32.h>
-#include <geometry_msgs/Vector3Stamped.h>
+#include <sensor_msgs/Imu.h>
 #include "accBasedControl.h"
-#include <message_filters/subscriber.h>
-#include <message_filters/synchronizer.h>
-#include <message_filters/sync_policies/approximate_time.h>
+
 
 #define QUEUE_SIZE 10
 
@@ -32,7 +30,7 @@ int main (int argc, char **argv)
     accBasedControl controlNode(mtwIDlimb.substr(mtwIDlimb.size()-1, mtwIDlimb.size()), 
                                 mtwIDexo.substr(mtwIDexo.size()-1, mtwIDexo.size()), QUEUE_SIZE);
 
-    ros::Rate callbacks_rate(500);      // 500 Hz to keep 120 Hz for each topic (4x) with a safety margin
+    ros::Rate callbacks_rate(300);      // 500 Hz to keep 120 Hz for each topic (4x) with a safety margin
     while (ros::ok())
     {
         controlNode.m_CallbackQueue.callOne();  // Callbacks are called as the msgs arrives, them the order between then is mostly respected with callOne()
