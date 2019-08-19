@@ -26,15 +26,18 @@
 	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
+/////////////////////////////////////////////////////////////////////////
+// Adaptation by Leonardo Felipe L. S. dos Santos, 2019 (@qleonardolp) //
+/////////////////////////////////////////////////////////////////////////
+
 #include <ros/ros.h>
 #include <sensor_msgs/Imu.h>
-#include <geometry_msgs/Vector3Stamped.h>
 #include "mastercallback.h"
 #include "mtwcallback.h"
 #include "findClosestUpdateRate.h"
-#include "xstypes.h"
 
 #include <xsensdeviceapi.h> // The Xsens device API header 
+#include "xstypes.h"
 #include "conio.h"			// For non ANSI _kbhit() and _getch()
 
 #include <string>
@@ -75,11 +78,24 @@ int main(int argc, char *argv[])
 	ros::init(argc, argv, "mt_w_driver");
 	ros::NodeHandle node;
 
-    const int desiredUpdateRate = 120;	// Use 120 Hz update rate for MTWs, 150 Hz crashes!
-	const int desiredRadioChannel = 25;	// Use radio channel 25 for wireless master.
+	/*
 
-	WirelessMasterCallback wirelessMasterCallback; // Callback for wireless master
-	std::vector<MtwCallback*> mtwCallbacks; // Callbacks for mtw devices
+	| MTw  | desiredUpdateRate (max) |
+	|------|-------------------------|
+	|  1   |           150 Hz        |
+	|  2   |           120 Hz        |
+	|  4   |           100 Hz        |
+	|  6   |            75 Hz        |
+	|  12  |            50 Hz        |
+	|  18  |            40 Hz        |
+
+	*/
+
+    const int desiredUpdateRate = 120;						// Use 120 Hz update rate for MTw, 150 Hz usually crashes!
+	const int desiredRadioChannel = 25;						// Use radio channel 25 for wireless master. (try Channels 11, 15, 20 or 25)
+
+	WirelessMasterCallback wirelessMasterCallback;			// Callback for wireless master
+	std::vector<MtwCallback*> mtwCallbacks;					// Callbacks for mtw devices
 
     ROS_INFO("Creating XsControl object...");
     XsControl* control = XsControl::construct();
@@ -171,12 +187,6 @@ int main(int argc, char *argv[])
 			}
 		}
 
-		/*
-		ROS_INFO_STREAM("Setting output mode for docked MTw...");
-		wirelessMasterDevice->
-
-		*/
-
         ROS_INFO_STREAM("Setting radio channel to " << desiredRadioChannel << " and enabling radio...");
          if (!wirelessMasterDevice->enableRadio(desiredRadioChannel))
 		{
@@ -216,9 +226,9 @@ int main(int argc, char *argv[])
 	    			interruption = true;
 	    			waitForConnections = false;
 	    		}	
-	    	}//works properly here
-	    }
-	    while (waitForConnections && ros::ok());
+	    	}
+
+	    }while (waitForConnections && ros::ok());
 
         if (interruption)
         {
@@ -301,7 +311,7 @@ int main(int argc, char *argv[])
 
         ROS_INFO("Publish loop starting...");
 
-		ros::AsyncSpinner spinner( mtwCallbacks.size() );			// threaded spinner, one thread per MTw
+		ros::AsyncSpinner spinner( mtwDevices.size() );			// threaded spinner, one thread per MTw
 		ros::V_Publisher imu_pubs;
         ros::Rate loop_rate = 2000;
 		ros::Time beginning;
@@ -336,26 +346,6 @@ int main(int argc, char *argv[])
             	    if (mtwCallbacks[i]->dataAvailable())
             	    {
             	        XsDataPacket const * packet = mtwCallbacks[i]->getOldestPacket();
-						
-						/*
-
-						if(packet->containsCalibratedGyroscopeData())
-						{
-							geometry_msgs::Vector3Stamped gyro_msg;
-
-            	            std::string frame_id = std::to_string( mtwCallbacks[i]->getMtwIndex() );
-            	            ros::param::getCached("~frame_id", frame_id);
-
-            	            gyro_msg.header.stamp.fromSec(ros::Time::now().toSec() - beginning.toSec());
-            	            gyro_msg.header.frame_id = frame_id + "_" + mtwDeviceIds[i].toString().toStdString();
-
-            	            gyro_msg.vector.x = packet->calibratedGyroscopeData().value(0);		// [rad/s]
-            	            gyro_msg.vector.y = packet->calibratedGyroscopeData().value(1);		// [rad/s]
-            	            gyro_msg.vector.z = packet->calibratedGyroscopeData().value(2);		// [rad/s]
-
-            	            gyros_pubs[i].publish(gyro_msg);
-						}
-						*/
 
 						if (packet->containsCalibratedData())
 						{

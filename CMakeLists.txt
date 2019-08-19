@@ -8,12 +8,10 @@ add_compile_options(-std=c++11)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
-  geometry_msgs
   roscpp
-  sensor_msgs
   std_msgs
-  tf2
-  tf2_ros
+  sensor_msgs
+  geometry_msgs
 )
 
 ## System dependencies are found with CMake's conventions
@@ -121,7 +119,6 @@ catkin_package(
 include_directories(
   include
   src
-# src/messagepublishers
   ${catkin_INCLUDE_DIRS}
 )
 
@@ -146,19 +143,7 @@ add_dependencies(${catkin_EXPORTED_TARGETS})
 ## The recommended prefix ensures that target names across packages don't collide
 # add_executable(${PROJECT_NAME}_node src/xsens_mtw_driver_node.cpp)
 
-#add_executable(xsens_mtw_node 
-#  src/mtw_node_main.cpp
-#  src/xdainterface.cpp
-#  src/xdacallback.cpp
-#  src/mastercallback.cpp
-#  src/mtwcallback.cpp
-#  src/findClosestUpdateRate.cpp
-#  src/conio.c
-#  src/console.cpp
-#  src/myxda.cpp
-#)
-
-add_executable(mt_w_node
+add_executable(mt_w_manager
   src/mt_w_main.cpp
   src/mastercallback.cpp
   src/mtwcallback.cpp
@@ -184,15 +169,7 @@ add_executable(acc_based_control
 
 ## Specify libraries to link a library or executable target against
 
-#target_link_libraries(xsens_mtw_node
-#  xsensdeviceapi
-#  xstypes
-#  pthread
-#  dl
-#  ${catkin_LIBRARIES}
-#)
-
-target_link_libraries(mt_w_node
+target_link_libraries(mt_w_manager
   xsensdeviceapi
   xstypes
   pthread

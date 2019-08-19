@@ -1,6 +1,6 @@
 # Xsens MTw driver using ROS-Kinetic
 
-This project aims to develop a driver on which the Xsens MTw sensors send the data in topics published through an main node managing the
+This project contains a driver on which the Xsens MTw sensors send the data in topics published through a node managing the
 connection with the Awinda base (USB port). Development based on [Xsens MTw SDK 4.6](https://www.xsens.com/mt-software-suite-mtw-awinda/).
 
 ### Hardware
@@ -23,7 +23,7 @@ on Xsens Awinda User Manual.
 - All dependencies (libraries, headers and sources files) are in this folder structure. The CMakelist file is already configured. Clone this repository into
 catkin_ws/src and do `catkin_make`. 
 
-    - Connect the Awinda Station USB in your computer and run the MTw Driver node: `$ rosrun xsens_mtw_driver mt_w_node`
+    - Connect the Awinda Station USB in your computer and run the MTw Driver node: `$ rosrun xsens_mtw_driver mt_w_manager`
 
     - Undock the MTW sensor and wait until the wireless connection being established: 
 
@@ -33,6 +33,19 @@ catkin_ws/src and do `catkin_make`.
 [ INFO] [1565393436.615162761]: Number of connected MTWs: 1. Press 'y' to start measurement or 'q' to end node.
 
 ```
+
+- Remember: as described on the Xsens MTw User Manual:
+
+| MTw  | desiredUpdateRate (max) |
+|------|-------------------------|
+|  1   |           150 Hz        |
+|  2   |           120 Hz        |
+|  4   |           100 Hz        |
+|  6   |            75 Hz        |
+|  12  |            50 Hz        |
+|  18  |            40 Hz        |
+
+
 - The **acc_based_control** is the node to calculate a desired Torque in a joint to minimize the interaction force between an exosuit and the user...
 
 ```
@@ -83,7 +96,7 @@ $ newgrp dialout
 
 ## License
 
-Checking the Xsens license... (wip)
+BSD license
 
 ## Trivia
 
