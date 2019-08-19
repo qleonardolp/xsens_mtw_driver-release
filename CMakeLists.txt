@@ -118,7 +118,6 @@ catkin_package(
 ## Your package locations should be listed before other locations
 include_directories(
   include
-  src
   ${catkin_INCLUDE_DIRS}
 )
 
@@ -153,10 +152,6 @@ add_executable(mt_w_manager
   src/myxda.cpp
 )
 
-add_executable(acc_based_control
-  forceEstimation/accBasedControl.cpp
-)
-
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
 ## target back to the shorter version for ease of user use
@@ -172,12 +167,6 @@ add_executable(acc_based_control
 target_link_libraries(mt_w_manager
   xsensdeviceapi
   xstypes
-  pthread
-  dl
-  ${catkin_LIBRARIES}
-)
-
-target_link_libraries(acc_based_control
   pthread
   dl
   ${catkin_LIBRARIES}

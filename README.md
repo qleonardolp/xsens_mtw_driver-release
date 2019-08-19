@@ -11,21 +11,14 @@ connection with the Awinda base (USB port). Development based on [Xsens MTw SDK 
 
 - The driver is developed upon the Xsens SDK 4.6, with ROS Kinetic on Ubuntu 16.04 LTS
 
-## Goals
-
-- _Read at least two accelerometers and publish free_acceleration @ 200 Hz_ : is apparently impossible once the publication rate
-is bounded by the `desiredUpdateRate` value set to the **Xsens Awinda Station**. The maximun value that works with two MTw is 120 Hz as suggested
-on Xsens Awinda User Manual.
-- _Read free_acceleration and gyroscope data_ : done at 120 Hz for both data for two sensors.
-
 ## Usage
 
 - All dependencies (libraries, headers and sources files) are in this folder structure. The CMakelist file is already configured. Clone this repository into
 catkin_ws/src and do `catkin_make`. 
 
-    - Connect the Awinda Station USB in your computer and run the MTw Driver node: `$ rosrun xsens_mtw_driver mt_w_manager`
+- Connect the Awinda Station USB in your computer and run the MTw Driver node: `$ rosrun xsens_mtw_driver mt_w_manager`
 
-    - Undock the MTW sensor and wait until the wireless connection being established: 
+- Undock the MTW sensor and wait until the wireless connection being established: 
 
 ```
 [ INFO] [1565393292.619168658]: Waiting for MTW to wirelessly connect...
@@ -34,7 +27,7 @@ catkin_ws/src and do `catkin_make`.
 
 ```
 
-- Remember: as described on the Xsens MTw User Manual:
+- Each MTw sensor will connect at once. Remember, as described on the Xsens MTw User Manual:
 
 | MTw  | desiredUpdateRate (max) |
 |------|-------------------------|
@@ -46,31 +39,12 @@ catkin_ws/src and do `catkin_make`.
 |  18  |            40 Hz        |
 
 
-- The **acc_based_control** is the node to calculate a desired Torque in a joint to minimize the interaction force between an exosuit and the user...
-
-```
-$ rosrun xsens_mtw_driver acc_based_control 324 323
-[ INFO] [1565821614.756475631]: Subcribed on /imu_00342324, /imu_00342323
-[ INFO] [1565821614.756544099]: Publishing on /desired_Torque
-```
-```
-$ rostopic hz /desired_Torque
-average rate: 120.034
-        ...
-```
-
 ## ToDo
 
-- [x] Update messages type on accBasedControl node, using `sensor_msgs::Imu` from now on;
+- [x] Update messages type to `sensor_msgs::Imu` from now on;
 - [ ] Study the mastercallback, mtwcallback and the in-build ROS callbacks;
-- [x] Develop a node that process the difference between the free accelerations of two MTw and do some math with (acc_based_control);
 - [ ] Calibrate the sensors through in-build SDK methods or through statistical data analyzed from an rosbag;
-- [ ] Configure the sensors to output the accelerations relative to a sensor-fixed frame;
 
-
-## Contribute
-
-- working in progress...
 
 ## Troubleshooting
 
@@ -96,8 +70,8 @@ $ newgrp dialout
 
 ## License
 
-BSD license
+- BSD license
 
-## Trivia
+## Contribute
 
-![Torque Demo](media/torque_demo.mp4)
+- Just Pull Request
