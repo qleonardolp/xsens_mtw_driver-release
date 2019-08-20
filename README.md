@@ -13,8 +13,7 @@ connection with the Awinda base (USB port). Development based on [Xsens MTw SDK 
 
 ## Usage
 
-- All dependencies (libraries, headers and sources files) are in this folder structure. The _CMakeList.txt_ file is ready to use. 
-Clone this repository into yuor catkin_ws/src and do `catkin_make`. 
+- All dependencies (libraries, headers and sources files) are in this folder structure. The _CMakeList.txt_ file is ready to use, contemplating the mininum XSens SDK reguired. Clone this repository into your catkin_ws/src and do `catkin_make`. 
 
 - Connect the Awinda Station USB in your computer and run the MTw Driver node: `$ rosrun xsens_mtw_drive mt_w_manager`
 
