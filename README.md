@@ -1,4 +1,4 @@
-# Xsens MTw driver using ROS-Kinetic
+# Xsens MTw driver for ROS-Kinetic
 
 This project contains a driver on which the Xsens MTw sensors send the data in topics published through a node managing the
 connection with the Awinda base (USB port). Development based on [Xsens MTw SDK 4.6](https://www.xsens.com/mt-software-suite-mtw-awinda/).
@@ -13,10 +13,10 @@ connection with the Awinda base (USB port). Development based on [Xsens MTw SDK 
 
 ## Usage
 
-- All dependencies (libraries, headers and sources files) are in this folder structure. The CMakelist file is already configured. Clone this repository into
-catkin_ws/src and do `catkin_make`. 
+- All dependencies (libraries, headers and sources files) are in this folder structure. The _CMakeList.txt_ file is ready to use. 
+Clone this repository into yuor catkin_ws/src and do `catkin_make`. 
 
-- Connect the Awinda Station USB in your computer and run the MTw Driver node: `$ rosrun xsens_mtw_driver mt_w_manager`
+- Connect the Awinda Station USB in your computer and run the MTw Driver node: `$ rosrun xsens_mtw_drive mt_w_manager`
 
 - Undock the MTW sensor and wait until the wireless connection being established: 
 
@@ -37,14 +37,6 @@ catkin_ws/src and do `catkin_make`.
 |  6   |            75 Hz        |
 |  12  |            50 Hz        |
 |  18  |            40 Hz        |
-
-
-## ToDo
-
-- [x] Update messages type to `sensor_msgs::Imu` from now on;
-- [ ] Study the mastercallback, mtwcallback and the in-build ROS callbacks;
-- [ ] Calibrate the sensors through in-build SDK methods or through statistical data analyzed from an rosbag;
-
 
 ## Troubleshooting
 
@@ -74,4 +66,10 @@ $ newgrp dialout
 
 ## Contribute
 
-- Just Pull Request
+I would like to enhance the driver performance for control porpuse (reduced latency, minimise reading errors ...). 
+If you could contribute, keep in mind these goals:
+
+- [x] Update messages type to `sensor_msgs::Imu` from now on;
+- [ ] Study the mastercallback, mtwcallback and the in-build ROS callbacks. Maybe using the own ROS callbacks we got some advantage;
+- [ ] Calibrate the sensors through in-build SDK methods or through statistical data analyzed from an rosbag;
+- [ ] Use ROS threaded spinning (or something to guarantee parallel readings from multiple MTw);
