@@ -1,7 +1,7 @@
 #ifndef MTWCALLBACK_H
 #define MTWCALLBACK_H
 
-#include <ros/ros.h>
+#include <rclcpp/rclcpp.hpp>
 #include <xsens/xscallback.h>
 #include <xsens/xsmutex.h>
 #include <mutex>
@@ -11,7 +11,7 @@
 struct XsDataPacket;
 struct XsDevice;
 
-typedef std::pair<ros::Time, XsDataPacket> RosXsDataPacket; //
+typedef std::pair<rclcpp::Time, XsDataPacket> RosXsDataPacket; //
 
 class MtwCallback : public XsCallback
 {

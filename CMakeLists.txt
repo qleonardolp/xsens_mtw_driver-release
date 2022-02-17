@@ -1,18 +1,23 @@
-cmake_minimum_required(VERSION 2.8.3)
+cmake_minimum_required(VERSION 3.5)
 project(xsens_mtw_driver)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
-add_compile_options(-std=c++11)
+# add_compile_options(-std=c++14)
+if(NOT CMAKE_CXX_STANDARD)
+  set(CMAKE_CXX_STANDARD 14)
+endif()
 
+if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+  add_compile_options(-Wall -Wextra -Wpedantic)
+endif()
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(catkin REQUIRED COMPONENTS
-  roscpp
-  std_msgs
-  sensor_msgs
-  geometry_msgs
-)
+find_package(ament_cmake REQUIRED)
+find_package(rclcpp REQUIRED)
+find_package(std_msgs REQUIRED)
+find_package(sensor_msgs REQUIRED)
+find_package(geometry_msgs REQUIRED)
 
 ## System dependencies are found with CMake's conventions
 find_package(Boost REQUIRED COMPONENTS system)
@@ -103,12 +108,12 @@ find_package(Boost REQUIRED COMPONENTS system)
 ## LIBRARIES: libraries you create in this project that dependent projects also need
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
-catkin_package(
+# catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES xsens_mtw_driver
 #  CATKIN_DEPENDS geometry_msgs roscpp sensor_msgs std_msgs tf2 tf2_ros
 #  DEPENDS system_lib
-)
+# )
 
 ###########
 ## Build ##
@@ -116,26 +121,24 @@ catkin_package(
 
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
-include_directories(
-  include
-  ${catkin_INCLUDE_DIRS}
-)
-
-link_directories(
-  lib
-)
+# target_include_directories(mt_w_manager PRIVATE
+#   include
+# # ${ament_INCLUDE_DIRS}
+# )
+include_directories(include)
+link_directories(lib)
 
 ## Declare a C++ library
-#add_library(
+# add_library(
 #  lib
-#)
+# )
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
 ## either from message generation or dynamic reconfigure
 # add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
-add_dependencies(${catkin_EXPORTED_TARGETS})
+# add_dependencies(${catkin_EXPORTED_TARGETS})
 
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
@@ -169,13 +172,30 @@ target_link_libraries(mt_w_manager
   xstypes
   pthread
   dl
-  ${catkin_LIBRARIES}
+)
+ament_target_dependencies(mt_w_manager rclcpp
+std_msgs
+sensor_msgs
+geometry_msgs)
+
+install(
+  DIRECTORY include/
+  DESTINATION include
+)
+install(
+  DIRECTORY lib/
+  DESTINATION lib
 )
 
+install(
+  TARGETS mt_w_manager
+  DESTINATION lib/${PROJECT_NAME}
+)
+
+ament_package()
 #############
 ## Install ##
 #############
-
 # all install targets should use catkin DESTINATION variables
 # See http://ros.org/doc/api/catkin/html/adv_user_guide/variables.html
 
