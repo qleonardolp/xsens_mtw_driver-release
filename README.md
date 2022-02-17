@@ -1,4 +1,4 @@
-# Xsens MTw driver for ROS-Kinetic
+# Xsens MTw driver for ROS2(Foxy)
 Migrate this project to ROS2.
 ---
 This project contains a driver on which the Xsens MTw sensors send the data in topics published through a node managing the
