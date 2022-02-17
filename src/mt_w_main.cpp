@@ -30,8 +30,8 @@
 // Adaptation by Leonardo Felipe L. S. dos Santos, 2019 (@qleonardolp) //
 /////////////////////////////////////////////////////////////////////////
 
-#include <ros/ros.h>
-#include <sensor_msgs/Imu.h>
+#include <rclcpp/rclcpp.hpp>
+#include <sensor_msgs/msg/imu.hpp>
 #include "mastercallback.h"
 #include "mtwcallback.h"
 #include "findClosestUpdateRate.h"
@@ -50,7 +50,9 @@
 #include <utility>
 
 #include <xsens/xsmutex.h>
-
+rclcpp::Node::SharedPtr node=nullptr;
+using rclcpp::executors::MultiThreadedExecutor;
+typedef std::vector<std::shared_ptr<rclcpp::Publisher<sensor_msgs::msg::Imu, std::allocator<void>>>> V_Publisher;
 /*! \brief Stream insertion operator overload for XsPortInfo */
 std::ostream& operator << (std::ostream& out, XsPortInfo const & p)
 {
@@ -70,13 +72,14 @@ std::ostream& operator << (std::ostream& out, XsDevice const & d)
 
 void handleError(std::string error)
 {
-	ROS_ERROR("%s", error.c_str());
+	RCLCPP_ERROR(node->get_logger(),"%s", error.c_str());
 }
 
 int main(int argc, char *argv[])
 {
-	ros::init(argc, argv, "mt_w_driver");
-	ros::NodeHandle node;
+	rclcpp::init(argc,argv);
+	node =rclcpp::Node::make_shared("mt_w_driver");
+	// ros::NodeHandle node;
 
 	/*
 
@@ -97,7 +100,7 @@ int main(int argc, char *argv[])
 	WirelessMasterCallback wirelessMasterCallback;			// Callback for wireless master
 	std::vector<MtwCallback*> mtwCallbacks;					// Callbacks for mtw devices
 
-    ROS_INFO("Creating XsControl object...");
+    RCLCPP_INFO(node->get_logger(),"Creating XsControl object...");
     XsControl* control = XsControl::construct();
     if (control == 0)
     {
@@ -110,7 +113,7 @@ int main(int argc, char *argv[])
         XsPortInfoArray detectedDevices = XsScanner::scanPorts();
 	    XsPortInfoArray::const_iterator wirelessMasterPort = detectedDevices.begin();
 
-        ROS_INFO("Scanning for devices...");
+        RCLCPP_INFO(node->get_logger(),"Scanning for devices...");
 
         while (wirelessMasterPort != detectedDevices.end() && !wirelessMasterPort->deviceId().isWirelessMaster())
 		{
@@ -121,10 +124,10 @@ int main(int argc, char *argv[])
 			throw std::runtime_error("No wireless masters found");
 		}
 
-        ROS_INFO("Found a device with ID: %s @ port: %s, baudrate: %d", wirelessMasterPort->deviceId().toString().toStdString().c_str(), 
+        RCLCPP_INFO(node->get_logger(),"Found a device with ID: %s @ port: %s, baudrate: %d", wirelessMasterPort->deviceId().toString().toStdString().c_str(), 
 	    wirelessMasterPort->portName().toStdString().c_str(), wirelessMasterPort->baudrate());
 
-        ROS_INFO("Opening port...");
+        RCLCPP_INFO(node->get_logger(),"Opening port...");
 
         if (!control->openPort(wirelessMasterPort->portName().toStdString(), wirelessMasterPort->baudrate()))
 		{
@@ -133,7 +136,7 @@ int main(int argc, char *argv[])
 			throw std::runtime_error(error.str());
 		}
 
-        ROS_INFO("Getting XsDevice instance for wireless master...");
+        RCLCPP_INFO(node->get_logger(),"Getting XsDevice instance for wireless master...");
 
         XsDevicePtr wirelessMasterDevice = control->device(wirelessMasterPort->deviceId());
         if (wirelessMasterDevice == 0)
@@ -143,8 +146,8 @@ int main(int argc, char *argv[])
 			throw std::runtime_error(error.str());
 		}
 
-        ROS_INFO("XsDevice instance for master created");
-        ROS_INFO("Setting config mode...");
+        RCLCPP_INFO(node->get_logger(),"XsDevice instance for master created");
+        RCLCPP_INFO(node->get_logger(),"Setting config mode...");
 
         if (!wirelessMasterDevice->gotoConfig())
 		{
@@ -153,13 +156,13 @@ int main(int argc, char *argv[])
 			throw std::runtime_error(error.str());
 		}
 
-        ROS_INFO("Attaching callback handler for master...");
+        RCLCPP_INFO(node->get_logger(),"Attaching callback handler for master...");
 		wirelessMasterDevice->addCallbackHandler(&wirelessMasterCallback);
 
-		ROS_INFO("Getting the list of the supported update rates...");
+		RCLCPP_INFO(node->get_logger(),"Getting the list of the supported update rates...");
 		const XsIntArray supportedUpdateRates = wirelessMasterDevice->supportedUpdateRates();
 
-        ROS_INFO_STREAM("Supported update rates: ");
+        RCLCPP_INFO_STREAM(node->get_logger(),"Supported update rates: ");
 		for (XsIntArray::const_iterator itUpRate = supportedUpdateRates.begin(); itUpRate != supportedUpdateRates.end(); ++itUpRate)
 		{
 			std::cout << *itUpRate << " ";
@@ -168,7 +171,7 @@ int main(int argc, char *argv[])
 
 		const int newUpdateRate = findClosestUpdateRate(supportedUpdateRates, desiredUpdateRate);
 
-        ROS_INFO_STREAM("Setting update rate to " << newUpdateRate << " Hz...");
+        RCLCPP_INFO_STREAM(node->get_logger(),"Setting update rate to " << newUpdateRate << " Hz...");
 		if (!wirelessMasterDevice->setUpdateRate(newUpdateRate))
 		{
 			std::ostringstream error;
@@ -176,7 +179,7 @@ int main(int argc, char *argv[])
 			throw std::runtime_error(error.str());
 		}
 
-        ROS_INFO("Disabling radio channel if previously enabled...");
+        RCLCPP_INFO(node->get_logger(),"Disabling radio channel if previously enabled...");
         if (wirelessMasterDevice->isRadioEnabled())
 		{
 			if (!wirelessMasterDevice->disableRadio())
@@ -187,7 +190,7 @@ int main(int argc, char *argv[])
 			}
 		}
 
-        ROS_INFO_STREAM("Setting radio channel to " << desiredRadioChannel << " and enabling radio...");
+        RCLCPP_INFO_STREAM(node->get_logger(),"Setting radio channel to " << desiredRadioChannel << " and enabling radio...");
          if (!wirelessMasterDevice->enableRadio(desiredRadioChannel))
 		{
 			std::ostringstream error;
@@ -195,7 +198,7 @@ int main(int argc, char *argv[])
 			throw std::runtime_error(error.str());
 		}
 
-        ROS_INFO("Waiting for MTW to wirelessly connect...");
+        RCLCPP_INFO(node->get_logger(),"Waiting for MTW to wirelessly connect...");
         bool waitForConnections = true;
 	    bool interruption = false;
 	    size_t connectedMTWCount = wirelessMasterCallback.getWirelessMTWs().size();
@@ -208,7 +211,7 @@ int main(int argc, char *argv[])
 	    		size_t nextCount = wirelessMasterCallback.getWirelessMTWs().size();
 	    		if (nextCount != connectedMTWCount)
 	    		{
-	    			ROS_INFO_STREAM("Number of connected MTWs: " << (int)nextCount << ". Press 'y' to start measurement or 'q' to end node.");
+	    			RCLCPP_INFO_STREAM(node->get_logger(),"Number of connected MTWs: " << (int)nextCount << ". Press 'y' to start measurement or 'q' to end node.");
 	    			connectedMTWCount = nextCount;
 	    		}
 	    		else
@@ -228,7 +231,7 @@ int main(int argc, char *argv[])
 	    		}	
 	    	}
 
-	    }while (waitForConnections && ros::ok());
+	    }while (waitForConnections && rclcpp::ok());
 
         if (interruption)
         {
@@ -239,7 +242,7 @@ int main(int argc, char *argv[])
 
         
 
-        ROS_INFO("Getting XsDevice instances for all MTWs...");
+        RCLCPP_INFO(node->get_logger(),"Getting XsDevice instances for all MTWs...");
 	    XsDeviceIdArray allDeviceIds = control->deviceIds();
         XsDeviceIdArray mtwDeviceIds;
 	    for (XsDeviceIdArray::const_iterator i = allDeviceIds.begin(); i != allDeviceIds.end(); ++i)
@@ -264,7 +267,7 @@ int main(int argc, char *argv[])
 			}
 		}
 
-        ROS_INFO("Attaching callback handlers to MTws...");
+        RCLCPP_INFO(node->get_logger(),"Attaching callback handlers to MTws...");
         mtwCallbacks.resize(mtwDevices.size());
 		for (int i = 0; i < (int)mtwDevices.size(); ++i)
 		{
@@ -278,30 +281,30 @@ int main(int argc, char *argv[])
 		XsOutputMode desiredOutput = XOM_Calibrated & XOM_Orientation;
 		XsOutputSettings desiredSettings = XOS_Timestamp_PacketCounter & XOS_OrientationMode_Matrix & XOS_CalibratedMode_AccGyrOnly;
 
-		ROS_INFO("Setting the desired OutputMode and OutputSettings... ");
+		RCLCPP_INFO(node->get_logger(),"Setting the desired OutputMode and OutputSettings... ");
 
 		for (int i = 0; i < mtwDevices.size(); i++)
 		{
 			if( !control->device(mtwDeviceIds[i])->setOutputMode(desiredOutput) )
-				ROS_WARN("Failed to set the desired OutputMode");
+				RCLCPP_WARN(node->get_logger(),"Failed to set the desired OutputMode");
 
 			if( !control->device(mtwDeviceIds[i])->setOutputSettings(desiredSettings) )
-				ROS_WARN("Failed to set the desired OutputSettings");
+				RCLCPP_WARN(node->get_logger(),"Failed to set the desired OutputSettings");
 
 			if(control->device(mtwDeviceIds[i])->isInLegacyMode())
 			{
-				ROS_INFO_STREAM(mtwDeviceIds[i].toString() << " is in LegacyMode");
+				RCLCPP_INFO_STREAM(node->get_logger(),mtwDeviceIds[i].toString() << " is in LegacyMode");
 
 				XsOutputMode mtw_output_mode = control->device(mtwDeviceIds[i])->outputMode();
 				XsOutputSettings mtw_output_settings = control->device(mtwDeviceIds[i])->outputSettings();
 
-				ROS_INFO_STREAM( mtw_output_mode << " " << mtw_output_settings );
+				RCLCPP_INFO_STREAM(node->get_logger(), mtw_output_mode << " " << mtw_output_settings );
 
 			}
 		}
 		///////////////////////////////////////////////////////////////////
 
-		ROS_INFO("Starting measurement...");
+		RCLCPP_INFO(node->get_logger(),"Starting measurement...");
         if (!wirelessMasterDevice->gotoMeasurement())
 		{
 			std::ostringstream error;
@@ -309,12 +312,13 @@ int main(int argc, char *argv[])
 			throw std::runtime_error(error.str());
 		}
 
-        ROS_INFO("Publish loop starting...");
+        RCLCPP_INFO(node->get_logger(),"Publish loop starting...");
 
-		ros::AsyncSpinner spinner( mtwDevices.size() );			// threaded spinner, one thread per MTw
-		ros::V_Publisher imu_pubs;
-        ros::Rate loop_rate = 2000;
-		ros::Time beginning;
+		MultiThreadedExecutor executor;
+		// ros::AsyncSpinner spinner( mtwDevices.size() );			// threaded spinner, one thread per MTw
+		V_Publisher imu_pubs;
+        rclcpp::Rate loop_rate(2000);
+		rclcpp::Time beginning;
 
 		/* 
 		Awinda Station Hardware throttles at the desiredUpdateRate
@@ -326,17 +330,18 @@ int main(int argc, char *argv[])
         {
             std::string mtwID = mtwDeviceIds[i].toString().toStdString();
 
-			ros::Publisher imu_pub = node.advertise<sensor_msgs::Imu>("imu_" + mtwID, 10);
+			auto imu_pub = node->create_publisher<sensor_msgs::msg::Imu>("imu_" + mtwID, 10);
 			imu_pubs.push_back(imu_pub);
         }
         
-		ROS_INFO("Publishers started, press 's' to stop!");
+		RCLCPP_INFO(node->get_logger(),"Publishers started, press 's' to stop!");
 
-		spinner.start();
+		// spinner.start();
+		rclcpp::spin_some(node);
 
-		beginning = ros::Time::now();
+		beginning = rclcpp::Clock().now();
 
-        while (ros::ok())
+        while (rclcpp::ok())
         {
 			if (!_kbhit())
 			{
@@ -349,7 +354,7 @@ int main(int argc, char *argv[])
 
 						if (packet->containsCalibratedData())
 						{
-							sensor_msgs::Imu imu_msg;
+							sensor_msgs::msg::Imu imu_msg;
 
 							imu_msg.header.frame_id = "imu_" + mtwDeviceIds[i].toString().toStdString();
 
@@ -369,16 +374,16 @@ int main(int argc, char *argv[])
 							imu_msg.orientation.w = packet->orientationQuaternion().w();				// unit quaternion
 							imu_msg.orientation_covariance[0] = -1;
 
-							imu_msg.header.stamp.fromSec(ros::Time::now().toSec() - beginning.toSec());	// [nsecs]
+							imu_msg.header.stamp.nanosec=(rclcpp::Clock().now().nanoseconds() - beginning.nanoseconds());
 
-							imu_pubs[i].publish(imu_msg);
+							imu_pubs[i]->publish(imu_msg);
 						}
 						
             	        mtwCallbacks[i]->deleteOldestPacket();
             	    }
             	}
 
-				beginning = ros::Time::now();	// time reference to get the messages delay after each publication loop
+				beginning = rclcpp::Clock().now();	// time reference to get the messages delay after each publication loop
 
 			}
 			else
@@ -390,7 +395,7 @@ int main(int argc, char *argv[])
             loop_rate.sleep();
         }
 
-		ROS_INFO("Setting config mode...");
+		RCLCPP_INFO(node->get_logger(),"Setting config mode...");
 		if (!wirelessMasterDevice->gotoConfig())
 		{
 			std::ostringstream error;
@@ -398,7 +403,7 @@ int main(int argc, char *argv[])
 			throw std::runtime_error(error.str());
 		}
 
-		ROS_INFO("Disabling radio... ");
+		RCLCPP_INFO(node->get_logger(),"Disabling radio... ");
 		if (!wirelessMasterDevice->disableRadio())
 		{
 			std::ostringstream error;
@@ -417,15 +422,15 @@ int main(int argc, char *argv[])
 		std::cout << "****ABORT****" << std::endl;
 	}
 
-	ROS_INFO("Closing XsControl...");
+	RCLCPP_INFO(node->get_logger(),"Closing XsControl...");
 	control->close();
 
-	ROS_INFO("Deleting mtw callbacks...");
+	RCLCPP_INFO(node->get_logger(),"Deleting mtw callbacks...");
 	for (std::vector<MtwCallback*>::iterator i = mtwCallbacks.begin(); i != mtwCallbacks.end(); ++i)
 	{
 		delete (*i);
 	}
 
-	ROS_INFO("Successful exit.");
+	RCLCPP_INFO(node->get_logger(),"Successful exit.");
 	return 0;
 }

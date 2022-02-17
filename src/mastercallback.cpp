@@ -1,6 +1,7 @@
 
 #include "mastercallback.h"
-#include <ros/ros.h>
+#include <rclcpp/rclcpp.hpp>
+#include <rclcpp/logging.hpp>
 
 //----------------------------------------------------------------------
 // Callback handler for wireless master
@@ -21,31 +22,31 @@ void WirelessMasterCallback::onConnectivityChanged(XsDevice* dev, XsConnectivity
 	case XCS_Disconnected:		/*!< Device has disconnected, only limited informational functionality is available. */
 		
         //std::cout << "\nEVENT: MTW Disconnected -> " << *dev << std::endl;
-		ROS_INFO_STREAM("EVENT: MTW Disconnected -> " << dev->deviceId().toString().toStdString() );
+		// RCLCPP_INFO_STREAM(node->get_logger(),"EVENT: MTW Disconnected -> " << dev->deviceId().toString().toStdString() );
 		m_connectedMTWs.erase(dev);
 		break;
 	case XCS_Rejected:			/*!< Device has been rejected and is disconnected, only limited informational functionality is available. */
-		ROS_INFO_STREAM("EVENT: MTW Rejected -> " << dev->deviceId().toString().toStdString() );
+		// RCLCPP_INFO_STREAM(node->get_logger(),"EVENT: MTW Rejected -> " << dev->deviceId().toString().toStdString() );
 		m_connectedMTWs.erase(dev);
 		break;
 	case XCS_PluggedIn:			/*!< Device is connected through a cable. */
-		ROS_INFO_STREAM("EVENT: MTW PluggedIn -> " << dev->deviceId().toString().toStdString() );
+		// RCLCPP_INFO_STREAM(node->get_logger(),"EVENT: MTW PluggedIn -> " << dev->deviceId().toString().toStdString() );
 		m_connectedMTWs.erase(dev);
 		break;
 	case XCS_Wireless:			/*!< Device is connected wirelessly. */
-		ROS_INFO_STREAM("EVENT: MTW Connected -> " << dev->deviceId().toString().toStdString() );
+		// RCLCPP_INFO_STREAM(node->get_logger(),"EVENT: MTW Connected -> " << dev->deviceId().toString().toStdString() );
 		m_connectedMTWs.insert(dev);
 		break;
 	case XCS_File:				/*!< Device is reading from a file. */
-		ROS_INFO_STREAM("EVENT: MTW File -> " << dev->deviceId().toString().toStdString() );
+		// RCLCPP_INFO_STREAM(node->get_logger(),"EVENT: MTW File -> " << dev->deviceId().toString().toStdString() );
 		m_connectedMTWs.erase(dev);
 		break;
 	case XCS_Unknown:			/*!< Device is in an unknown state. */
-		ROS_INFO_STREAM("EVENT: MTW Unkown -> " << dev->deviceId().toString().toStdString() );
+		// RCLCPP_INFO_STREAM(node->get_logger(),"EVENT: MTW Unkown -> " << dev->deviceId().toString().toStdString() );
 		m_connectedMTWs.erase(dev);
 		break;
 	default:
-		ROS_INFO_STREAM("EVENT: MTW Error -> " << dev->deviceId().toString().toStdString() );
+		// RCLCPP_INFO_STREAM(node->get_logger(),"EVENT: MTW Error -> " << dev->deviceId().toString().toStdString() );
 		m_connectedMTWs.erase(dev);
 		break;
 	}
