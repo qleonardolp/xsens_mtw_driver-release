@@ -301,7 +301,7 @@ struct XsSocket
 #ifdef _MSC_VER
 		throw(...)
 #else
-		throw(std::bad_alloc)
+		throw()
 #endif
 	{
 		XsSocket *s = XsSocket_allocate();
