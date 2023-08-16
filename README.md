@@ -14,9 +14,9 @@ connection with the Awinda base (USB port).
 
 ## Usage
 
-- All dependencies (libraries, headers and sources files) are in this folder structure. The _CMakeList.txt_ file is ready to use, contemplating the mininum XSens SDK required. Clone this repository into your catkin_ws/src and do `catkin_make`. 
+- All dependencies (libraries, headers and sources files) are in this folder structure. The _CMakeList.txt_ file is ready to use, contemplating the mininum XSens SDK required. Clone this repository into your ros2_ws/src and do `colcon build` in ros2_ws/. 
 
-- Connect the Awinda Station USB in your computer and run the MTw Driver node: `$ rosrun xsens_mtw_drive mt_w_manager`
+- Connect the Awinda Station USB in your computer and run the MTw Driver node: `$ ros2 run xsens_mtw_driver mt_w_manager`
 
 - Undock the MTW sensor and wait until the wireless connection being established: 
 
