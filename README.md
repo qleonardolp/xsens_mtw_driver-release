@@ -1,8 +1,8 @@
-# Xsens MTw driver for ROS2(Foxy)
+# Xsens MTw driver for ROS2 (Foxy/Humble)
 Migrate this project to ROS2.
 ---
 This project contains a driver on which the Xsens MTw sensors send the data in topics published through a node managing the
-connection with the Awinda base (USB port). Development based on [Xsens MTw SDK 4.6](https://www.xsens.com/mt-software-suite-mtw-awinda/).
+connection with the Awinda base (USB port).
 
 ### Hardware
 
@@ -10,7 +10,7 @@ connection with the Awinda base (USB port). Development based on [Xsens MTw SDK 
 
 ### Software
 
-- The driver is developed upon the Xsens SDK 4.6, with ROS Kinetic on Ubuntu 16.04 LTS
+- The driver is developed upon the Xsens SDK 4.6, with ROS2 on Ubuntu 22.04 LTS
 
 ## Usage
 
