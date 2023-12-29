@@ -63,13 +63,3 @@ $ newgrp dialout
 ## License
 
 - BSD license
-
-## Contribute
-
-I would like to enhance the driver performance for control porpuse (reduced latency, minimise reading errors ...). 
-If you could contribute, keep in mind these goals:
-
-- [x] Update messages type to `sensor_msgs::Imu` from now on;
-- [ ] Study the mastercallback, mtwcallback and the in-build ROS callbacks. Maybe using the own ROS callbacks we got some advantage;
-- [ ] Calibrate the sensors through in-build SDK methods or through statistical data analyzed from an rosbag;
-- [ ] Use ROS threaded spinning (or something to guarantee parallel readings from multiple MTw);
