@@ -1,53 +1,52 @@
+// Copyright (c) 2019, qleonardolp
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 #include "mastercallback.h"
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp/logging.hpp>
 
-//----------------------------------------------------------------------
-// Callback handler for wireless master
-//----------------------------------------------------------------------
-
 
 XsDeviceSet WirelessMasterCallback::getWirelessMTWs() const
-{        
-	XsMutexLocker lock(m_mutex);
-	return m_connectedMTWs;
+{
+  XsMutexLocker lock(m_mutex);
+  return m_connectedMTWs;
 }
 
-void WirelessMasterCallback::onConnectivityChanged(XsDevice* dev, XsConnectivityState newState)
+void WirelessMasterCallback::onConnectivityChanged(XsDevice * dev, XsConnectivityState newState)
 {
-	XsMutexLocker lock(m_mutex);
-	switch (newState)
-	{
-	case XCS_Disconnected:		/*!< Device has disconnected, only limited informational functionality is available. */
-		
-        //std::cout << "\nEVENT: MTW Disconnected -> " << *dev << std::endl;
-		// RCLCPP_INFO_STREAM(node->get_logger(),"EVENT: MTW Disconnected -> " << dev->deviceId().toString().toStdString() );
-		m_connectedMTWs.erase(dev);
-		break;
-	case XCS_Rejected:			/*!< Device has been rejected and is disconnected, only limited informational functionality is available. */
-		// RCLCPP_INFO_STREAM(node->get_logger(),"EVENT: MTW Rejected -> " << dev->deviceId().toString().toStdString() );
-		m_connectedMTWs.erase(dev);
-		break;
-	case XCS_PluggedIn:			/*!< Device is connected through a cable. */
-		// RCLCPP_INFO_STREAM(node->get_logger(),"EVENT: MTW PluggedIn -> " << dev->deviceId().toString().toStdString() );
-		m_connectedMTWs.erase(dev);
-		break;
-	case XCS_Wireless:			/*!< Device is connected wirelessly. */
-		// RCLCPP_INFO_STREAM(node->get_logger(),"EVENT: MTW Connected -> " << dev->deviceId().toString().toStdString() );
-		m_connectedMTWs.insert(dev);
-		break;
-	case XCS_File:				/*!< Device is reading from a file. */
-		// RCLCPP_INFO_STREAM(node->get_logger(),"EVENT: MTW File -> " << dev->deviceId().toString().toStdString() );
-		m_connectedMTWs.erase(dev);
-		break;
-	case XCS_Unknown:			/*!< Device is in an unknown state. */
-		// RCLCPP_INFO_STREAM(node->get_logger(),"EVENT: MTW Unkown -> " << dev->deviceId().toString().toStdString() );
-		m_connectedMTWs.erase(dev);
-		break;
-	default:
-		// RCLCPP_INFO_STREAM(node->get_logger(),"EVENT: MTW Error -> " << dev->deviceId().toString().toStdString() );
-		m_connectedMTWs.erase(dev);
-		break;
-	}
+  XsMutexLocker lock(m_mutex);
+  switch (newState) {
+    case XCS_Disconnected:
+      m_connectedMTWs.erase(dev);
+      break;
+    case XCS_Rejected:
+      m_connectedMTWs.erase(dev);
+      break;
+    case XCS_PluggedIn:
+      m_connectedMTWs.erase(dev);
+      break;
+    case XCS_Wireless:
+      m_connectedMTWs.insert(dev);
+      break;
+    case XCS_File:
+      m_connectedMTWs.erase(dev);
+      break;
+    case XCS_Unknown:
+      m_connectedMTWs.erase(dev);
+      break;
+    default:
+      m_connectedMTWs.erase(dev);
+      break;
+  }
 }
