@@ -1,12 +1,18 @@
-cmake_minimum_required(VERSION 3.5)
-project(xsens_mtw_driver VERSION 2.0.0 LANGUAGES CXX)
+cmake_minimum_required(VERSION 3.8)
+project(xsens_mtw_driver VERSION 2.0.1 LANGUAGES CXX)
 
+# Default to C99
+if(NOT CMAKE_C_STANDARD)
+  set(CMAKE_C_STANDARD 99)
+endif()
+
+# Default to C++14
 if(NOT CMAKE_CXX_STANDARD)
   set(CMAKE_CXX_STANDARD 14)
 endif()
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-  add_compile_options(-Wall -Wextra -Wpedantic)
+  add_compile_options(-Wall -Wextra -Wpedantic -fms-extensions)
 endif()
 
 find_package(ament_cmake REQUIRED)
@@ -24,7 +30,6 @@ add_executable(awinda_manager
   src/mastercallback.cpp
   src/mtwcallback.cpp
   src/findClosestUpdateRate.cpp
-  src/conio.c
 )
 
 target_link_libraries(awinda_manager

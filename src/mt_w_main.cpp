@@ -12,15 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <rclcpp/rclcpp.hpp>
-#include <sensor_msgs/msg/imu.hpp>
-#include "mastercallback.h"
-#include "mtwcallback.h"
-#include "findClosestUpdateRate.h"
-
-#include <xsensdeviceapi.h>
 #include "xstypes.h"
-#include "conio.h"
+#include "mtwcallback.h"
+#include "mastercallback.h"
+#include "findClosestUpdateRate.h"
+#include <xsensdeviceapi.h>
 
 #include <string>
 #include <stdexcept>
@@ -32,6 +28,9 @@
 #include <utility>
 
 #include <xsens/xsmutex.h>
+
+#include <rclcpp/rclcpp.hpp>
+#include <sensor_msgs/msg/imu.hpp>
 
 rclcpp::Node::SharedPtr node = nullptr;
 using rclcpp::executors::MultiThreadedExecutor;
@@ -178,17 +177,6 @@ int main(int argc, char *argv[])
           break;
         }
       }
-      if (_kbhit()) {
-        char keypressed = (char)_getch();
-        if(keypressed == 'y') {
-          waitForConnections = false;
-        }
-        if(keypressed == 'q') {
-          interruption = true;
-          waitForConnections = false;
-        }
-      }
-
     }while (waitForConnections && rclcpp::ok());
 
     if (interruption) {
@@ -277,56 +265,48 @@ int main(int argc, char *argv[])
       imu_pubs.push_back(imu_pub);
     }
 
-    RCLCPP_INFO(node->get_logger(), "Publishers started, press 's' to stop!");
+    RCLCPP_INFO(node->get_logger(), "Publishers started!");
 
     rclcpp::spin_some(node);
 
     beginning = rclcpp::Clock().now();
 
     while (rclcpp::ok()) {
-      if (!_kbhit()) {
+      for (size_t i = 0; i < mtwCallbacks.size(); ++i) {
+        if (mtwCallbacks[i]->dataAvailable()) {
+          XsDataPacket const * packet = mtwCallbacks[i]->getOldestPacket();
 
-        for (size_t i = 0; i < mtwCallbacks.size(); ++i) {
-          if (mtwCallbacks[i]->dataAvailable()) {
-            XsDataPacket const * packet = mtwCallbacks[i]->getOldestPacket();
+          if (packet->containsCalibratedData()) {
+            sensor_msgs::msg::Imu imu_msg;
 
-            if (packet->containsCalibratedData()) {
-              sensor_msgs::msg::Imu imu_msg;
+            imu_msg.header.frame_id = "imu_" + mtwDeviceIds[i].toString().toStdString();
 
-              imu_msg.header.frame_id = "imu_" + mtwDeviceIds[i].toString().toStdString();
+            imu_msg.linear_acceleration.x = packet->calibratedAcceleration().value(0);    // [m/s²]
+            imu_msg.linear_acceleration.y = packet->calibratedAcceleration().value(1);    // [m/s²]
+            imu_msg.linear_acceleration.z = packet->calibratedAcceleration().value(2);    // [m/s²]
+            imu_msg.linear_acceleration_covariance[0] = -1;
 
-              imu_msg.linear_acceleration.x = packet->calibratedAcceleration().value(0);  // [m/s²]
-              imu_msg.linear_acceleration.y = packet->calibratedAcceleration().value(1);  // [m/s²]
-              imu_msg.linear_acceleration.z = packet->calibratedAcceleration().value(2);  // [m/s²]
-              imu_msg.linear_acceleration_covariance[0] = -1;
+            imu_msg.angular_velocity.x = packet->calibratedGyroscopeData().value(0);    // [rad/s]
+            imu_msg.angular_velocity.y = packet->calibratedGyroscopeData().value(1);    // [rad/s]
+            imu_msg.angular_velocity.z = packet->calibratedGyroscopeData().value(2);    // [rad/s]
+            imu_msg.angular_velocity_covariance[0] = -1;
 
-              imu_msg.angular_velocity.x = packet->calibratedGyroscopeData().value(0);  // [rad/s]
-              imu_msg.angular_velocity.y = packet->calibratedGyroscopeData().value(1);  // [rad/s]
-              imu_msg.angular_velocity.z = packet->calibratedGyroscopeData().value(2);  // [rad/s]
-              imu_msg.angular_velocity_covariance[0] = -1;
+            imu_msg.orientation.x = packet->orientationQuaternion().x();
+            imu_msg.orientation.y = packet->orientationQuaternion().y();
+            imu_msg.orientation.z = packet->orientationQuaternion().z();
+            imu_msg.orientation.w = packet->orientationQuaternion().w();
+            imu_msg.orientation_covariance[0] = -1;
 
-              imu_msg.orientation.x = packet->orientationQuaternion().x();
-              imu_msg.orientation.y = packet->orientationQuaternion().y();
-              imu_msg.orientation.z = packet->orientationQuaternion().z();
-              imu_msg.orientation.w = packet->orientationQuaternion().w();
-              imu_msg.orientation_covariance[0] = -1;
+            imu_msg.header.stamp.nanosec = (rclcpp::Clock().now().nanoseconds() - beginning.nanoseconds());
 
-              imu_msg.header.stamp.nanosec = (rclcpp::Clock().now().nanoseconds() - beginning.nanoseconds());
-
-              imu_pubs[i]->publish(imu_msg);
-            }
-
-            mtwCallbacks[i]->deleteOldestPacket();
+            imu_pubs[i]->publish(imu_msg);
           }
-        }
 
-        beginning = rclcpp::Clock().now();
-
-      } else {
-        if((char)_getch() == 's') {
-          break;
+          mtwCallbacks[i]->deleteOldestPacket();
         }
       }
+
+      beginning = rclcpp::Clock().now();
       loop_rate.sleep();
     }
 
